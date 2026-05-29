@@ -7,6 +7,14 @@ updates:
     groups:
       minor-and-patch:
         update-types: ["minor", "patch"]
+    # typescript and eslint are pinned to match the peer requirements of
+    # @n8n/node-cli. Suppressing major-version PRs that would break the build.
+    # Re-evaluate when @n8n/node-cli relaxes these peers.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
