@@ -8,13 +8,14 @@ updates:
       minor-and-patch:
         update-types: ["minor", "patch"]
     # typescript and eslint are pinned to match the peer requirements of
-    # @n8n/node-cli. Suppressing major-version PRs that would break the build.
+    # @n8n/node-cli@0.32.1. eslint is peer-pinned at exactly 9.29.0, so ALL
+    # eslint updates (even patch bumps) break the build until n8n loosens it.
+    # typescript major bumps break compatibility but minors are usually safe.
     # Re-evaluate when @n8n/node-cli relaxes these peers.
     ignore:
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
       - dependency-name: "eslint"
-        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
