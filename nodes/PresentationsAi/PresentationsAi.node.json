@@ -1,0 +1,18 @@
+{
+	"node": "n8n-nodes-base.presentationsAi",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["AI", "Marketing", "Productivity"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://console.presentations.ai/apiref/docs/"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/slidecraft-in/n8n-nodes-presentations-ai/blob/main/README.md"
+			}
+		]
+	}
+}
