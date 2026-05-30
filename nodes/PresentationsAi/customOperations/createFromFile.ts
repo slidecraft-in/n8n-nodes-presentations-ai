@@ -11,6 +11,7 @@ import { extractApiErrorMessage } from '../shared/transport';
 const CREDENTIAL_NAME = 'presentationsAiApi';
 const DEFAULT_BASE_URL = 'https://api.presentations.ai';
 const FILE_ENDPOINT = '/api/v1/document/file';
+const MAX_FILE_BYTES = 5 * 1024 * 1024; // server-side limit: 5 MB
 
 // Presentations.AI's POST /api/v1/document/file accepts a multipart/form-data
 // upload. n8n's declarative routing cannot model this, so the operation is
@@ -31,6 +32,14 @@ export async function createFromFile(
 			const binary = this.helpers.assertBinaryData(i, binaryProperty);
 			const buffer = await this.helpers.getBinaryDataBuffer(i, binaryProperty);
 
+			if (buffer.length > MAX_FILE_BYTES) {
+				throw new NodeOperationError(
+					this.getNode(),
+					`File exceeds the 5 MB upload limit (got ${(buffer.length / 1024 / 1024).toFixed(2)} MB). Compress or split the document before uploading.`,
+					{ itemIndex: i },
+				);
+			}
+
 			const exportType = this.getNodeParameter('exportType', i) as string;
 			const topic = this.getNodeParameter('topic', i, '') as string;
 			const slideCount = this.getNodeParameter('slideCount', i, undefined) as
@@ -44,12 +53,19 @@ export async function createFromFile(
 				'',
 			) as string;
 			const targetAudience = this.getNodeParameter(
-				'target_audience',
+				'targetAudience',
 				i,
 				'',
 			) as string;
 			const tone = this.getNodeParameter('tone', i, '') as string;
-			const callbackUrl = this.getNodeParameter('callback_url', i, '') as string;
+			const callbackUrl = this.getNodeParameter('callbackUrl', i, '') as string;
+			if (callbackUrl && !/^https:\/\//i.test(callbackUrl.trim())) {
+				throw new NodeOperationError(
+					this.getNode(),
+					'Callback URL must start with https://. Plain http:// is not accepted because the API posts results to it.',
+					{ itemIndex: i },
+				);
+			}
 
 			const formData: Record<string, unknown> = {
 				file: {

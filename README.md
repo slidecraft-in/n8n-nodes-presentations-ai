@@ -29,7 +29,7 @@ All creation ops export to PPTX, PPT, PDF, image, render (HTML preview), or shar
 
 ### Job
 
-- **Check Status** — poll an async generation by `job_id`. Returns `pending`, `completed`, or `failed`.
+- **Check Status** — poll an async generation. Accepts either the bare `job_id` returned by a previous async op, or the full `pollUrl` (the trailing path segment is used as the job id). Returns `pending`, `completed`, or `failed`.
 
 ## Preservation Mode (Content / File ops)
 

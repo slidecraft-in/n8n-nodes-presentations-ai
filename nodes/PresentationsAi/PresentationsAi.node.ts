@@ -1,5 +1,6 @@
 import { NodeConnectionTypes, type INodeType, type INodeTypeDescription } from 'n8n-workflow';
 
+import { checkStatus } from './customOperations/checkStatus';
 import { createFromFile } from './customOperations/createFromFile';
 import { jobDescription } from './resources/job';
 import { presentationDescription } from './resources/presentation';
@@ -46,6 +47,9 @@ export class PresentationsAi implements INodeType {
 	customOperations = {
 		presentation: {
 			createFromFile,
+		},
+		job: {
+			checkStatus,
 		},
 	};
 }

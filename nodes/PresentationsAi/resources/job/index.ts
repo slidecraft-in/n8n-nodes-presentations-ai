@@ -14,25 +14,21 @@ export const jobDescription: INodeProperties[] = [
 				name: 'Check Status',
 				value: 'checkStatus',
 				action: 'Check the status of an async job',
-				description: 'Poll for the result of an async presentation job started with a callback URL or "Return Job ID Immediately" set to true',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/api/v1/polljob/{{$parameter["jobId"]}}',
-					},
-				},
+				description:
+					'Poll for the result of an async presentation job. Accepts either a bare job_id or the full pollUrl returned by a previous async operation.',
 			},
 		],
 		default: 'checkStatus',
 	},
 	{
-		displayName: 'Job ID',
+		displayName: 'Job ID or Poll URL',
 		name: 'jobId',
 		type: 'string',
 		required: true,
 		default: '',
-		placeholder: 'e.g. job_abc123',
-		description: 'The job_id returned by a previous async presentation operation',
+		placeholder: 'e.g. 03267dc1-1338-4942-b44c-1ed3f0c83180 or {{ $json.pollUrl }}',
+		description:
+			'Accepts either the bare job_id returned by a previous async operation, or the full pollUrl (the trailing path segment is used as the job_id)',
 		displayOptions: { show: { resource: ['job'], operation: ['checkStatus'] } },
 	},
 ];

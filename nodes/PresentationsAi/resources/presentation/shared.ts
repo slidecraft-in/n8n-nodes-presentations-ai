@@ -96,13 +96,14 @@ export const exportTypeField: INodeProperties = {
 
 export const targetAudienceField: INodeProperties = {
 	displayName: 'Target Audience',
-	name: 'target_audience',
+	name: 'targetAudience',
 	type: 'options',
 	options: TARGET_AUDIENCE_OPTIONS,
 	default: 'general-audience',
 	description: 'Who the presentation is aimed at — influences tone, depth, and examples',
 	displayOptions: presentationShow(CREATE_OPS),
 	routing: {
+		// Server expects snake_case on JSON endpoints; createFromFile multipart sends camelCase separately.
 		send: { type: 'body', property: 'target_audience' },
 	},
 };
@@ -161,12 +162,12 @@ export const domainField: INodeProperties = {
 
 export const callbackUrlField: INodeProperties = {
 	displayName: 'Callback URL',
-	name: 'callback_url',
+	name: 'callbackUrl',
 	type: 'string',
 	default: '',
 	placeholder: 'https://your-server.com/webhook/presentations',
 	description:
-		'Optional HTTPS webhook. When set, the operation returns immediately with a job_id and the result is POSTed to this URL when complete.',
+		'Optional HTTPS webhook. When set, the operation returns immediately with a job_id and the result is POSTed to this URL when complete. Must start with https://.',
 	displayOptions: presentationShow(CREATE_OPS),
 	routing: {
 		send: { type: 'body', property: 'callback_url' },
@@ -179,8 +180,8 @@ export const immediatePollUrlField: INodeProperties = {
 	type: 'boolean',
 	default: false,
 	description:
-		'Whether to return a job_id immediately instead of waiting for the presentation to be ready. Use Job → Check Status to poll for completion.',
-	displayOptions: presentationShow(['createFromTopic']),
+		'Whether to return a job_id (and pollUrl) immediately instead of waiting for the presentation to be ready. Use Job → Check Status to poll for completion.',
+	displayOptions: presentationShow(CREATE_OPS),
 	routing: {
 		send: { type: 'body', property: 'immediatePollUrl' },
 	},
