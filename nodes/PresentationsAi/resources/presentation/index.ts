@@ -55,13 +55,6 @@ export const presentationDescription: INodeProperties[] = [
 				action: 'Create a presentation from a document file',
 				description:
 					'Convert an uploaded PDF, DOCX, PPTX, TXT, MD, or RTF file (max 5 MB) into a deck. Routed via a multipart upload handler.',
-				// Routing bypassed — handled by customOperations.presentation.createFromFile
-				routing: {
-					request: {
-						method: 'POST',
-						url: '/api/v1/document/file',
-					},
-				},
 			},
 		],
 		default: 'createFromTopic',
