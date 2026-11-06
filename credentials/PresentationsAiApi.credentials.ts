@@ -11,7 +11,7 @@ export class PresentationsAiApi implements ICredentialType {
 
 	displayName = 'Presentations.AI API';
 
-	documentationUrl = 'https://console.presentations.ai/apiref/docs/';
+	documentationUrl = 'https://docs.presentations.ai';
 
 	icon: Icon = {
 		light: 'file:../nodes/PresentationsAi/presentations-ai.svg',
@@ -26,9 +26,9 @@ export class PresentationsAiApi implements ICredentialType {
 			typeOptions: { password: true },
 			default: '',
 			required: true,
-			placeholder: 'pai_...',
+			placeholder: 'pai_live_...',
 			description:
-				'Your Presentations.AI API key. Create one at console.presentations.ai. Keys start with "pai_".',
+				'Your Presentations.AI API key. Create one at https://api.presentations.ai/#/apikeys. Keys start with "pai_live_".',
 		},
 		{
 			displayName: 'Base URL',
@@ -36,7 +36,7 @@ export class PresentationsAiApi implements ICredentialType {
 			type: 'string',
 			default: 'https://api.presentations.ai',
 			description:
-				'Base URL for the Presentations.AI REST API. Override only if you are using a self-hosted or staging endpoint.',
+				'Base URL of the Presentations.AI API. Change it only to use another environment, such as https://api.dev.presentations.ai.',
 		},
 	];
 
@@ -51,9 +51,21 @@ export class PresentationsAiApi implements ICredentialType {
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: '={{$credentials.baseUrl}}',
-			url: '/api/v1/authenticate',
+			// Same rules as the node: empty means production; a trailing slash or /api/v1 is ignored.
+			baseURL:
+				'={{ ($credentials.baseUrl || "https://api.presentations.ai").trim().replace(/\\/+$/, "").replace(/\\/api\\/v1$/i, "") }}',
+			url: '/api/v1/me',
 			method: 'GET',
 		},
+		rules: [
+			{
+				type: 'responseCode',
+				properties: {
+					value: 401,
+					message:
+						"This API key isn't valid here. Create a new key at https://api.presentations.ai/#/apikeys; keys from the previous Presentations.AI API no longer work.",
+				},
+			},
+		],
 	};
 }
