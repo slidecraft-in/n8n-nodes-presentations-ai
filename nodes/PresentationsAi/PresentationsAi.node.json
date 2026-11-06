@@ -3,10 +3,11 @@
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Productivity", "Marketing & Content"],
+	"alias": ["Slides", "Slide Deck", "Deck", "PowerPoint", "PPTX", "Pitch Deck"],
 	"resources": {
 		"credentialDocumentation": [
 			{
-				"url": "https://console.presentations.ai/apiref/docs/"
+				"url": "https://docs.presentations.ai"
 			}
 		],
 		"primaryDocumentation": [
