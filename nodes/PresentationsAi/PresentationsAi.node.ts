@@ -1,9 +1,15 @@
-import { NodeConnectionTypes, type INodeType, type INodeTypeDescription } from 'n8n-workflow';
+import type {
+	IExecuteFunctions,
+	INodeExecutionData,
+	INodeType,
+	INodeTypeDescription,
+} from 'n8n-workflow';
+import { NodeConnectionTypes } from 'n8n-workflow';
 
-import { checkStatus } from './customOperations/checkStatus';
-import { createFromFile } from './customOperations/createFromFile';
-import { jobDescription } from './resources/job';
-import { presentationDescription } from './resources/presentation';
+import * as job from './actions/job';
+import * as presentation from './actions/presentation';
+import { router } from './actions/router';
+import { searchBrandKits, searchProjects } from './methods/listSearch';
 
 export class PresentationsAi implements INodeType {
 	description: INodeTypeDescription = {
@@ -14,19 +20,16 @@ export class PresentationsAi implements INodeType {
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description:
-			'Generate, transform, and export AI-powered slide decks from a topic, raw text, or document file via the Presentations.AI REST API.',
+			'Create AI-generated slide decks from a topic, text or document with Presentations.AI and get the finished file back',
 		defaults: { name: 'Presentations.AI' },
 		usableAsTool: true,
+		builderHint: {
+			message:
+				"Creates presentations with Presentations.AI. Create operations wait for the presentation and return the file in the binary field 'data' (PPTX, PDF, or a ZIP of slide images) with JSON fields status, request_id, deck_url and share_url. With 'Wait for Completion' off they return at once; use the Job resource's 'Get Status' operation with request_id to check on it and download the file. Create From File needs a binary file from an earlier node.",
+		},
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [{ name: 'presentationsAiApi', required: true }],
-		requestDefaults: {
-			baseURL: '={{$credentials.baseUrl}}',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-			},
-		},
 		properties: [
 			{
 				displayName: 'Resource',
@@ -39,17 +42,16 @@ export class PresentationsAi implements INodeType {
 				],
 				default: 'presentation',
 			},
-			...presentationDescription,
-			...jobDescription,
+			...presentation.description,
+			...job.description,
 		],
 	};
 
-	customOperations = {
-		presentation: {
-			createFromFile,
-		},
-		job: {
-			checkStatus,
-		},
+	methods = {
+		listSearch: { searchBrandKits, searchProjects },
 	};
+
+	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+		return await router.call(this);
+	}
 }

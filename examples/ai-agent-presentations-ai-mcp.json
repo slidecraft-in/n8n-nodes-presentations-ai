@@ -1,0 +1,153 @@
+{
+	"name": "AI Agent makes a deck via Presentations.AI MCP",
+	"nodes": [
+		{
+			"parameters": {
+				"options": {}
+			},
+			"id": "f6e4a612-caf5-437a-93b2-d4a36157c819",
+			"name": "Chat with the assistant",
+			"type": "@n8n/n8n-nodes-langchain.chatTrigger",
+			"typeVersion": 1.4,
+			"position": [0, 0]
+		},
+		{
+			"parameters": {
+				"options": {
+					"systemMessage": "You make slide decks for the user with the Presentations.AI tools.\n\n- If the topic is unclear, ask one short question first. Otherwise use sensible defaults, such as 10 slides for a general audience.\n- Create one deck per request. Do not start a second deck for the same request.\n- A deck usually takes 2 to 4 minutes. Keep checking its status until it is finished or has failed.\n- When it is finished, give the user the download link and say that it expires after 15 minutes.\n- Create a share link only when the user asks to share the deck, and tell them that anyone with the link can view it.\n- If something fails, tell the user the error message.",
+					"maxIterations": 15
+				}
+			},
+			"id": "e5c0cc92-a9e8-4149-bf0c-e4f5ba09d3bc",
+			"name": "Presentation assistant",
+			"type": "@n8n/n8n-nodes-langchain.agent",
+			"typeVersion": 3,
+			"position": [260, 0]
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"mode": "list",
+					"value": "gpt-5-mini"
+				},
+				"options": {}
+			},
+			"id": "aa2a97ed-0916-4f6c-bea8-1e3909a83b3f",
+			"name": "Planning model",
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.3,
+			"position": [140, 240]
+		},
+		{
+			"parameters": {},
+			"id": "5417157e-916f-4c87-aa2a-2a2e6f388a23",
+			"name": "Conversation memory",
+			"type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+			"typeVersion": 1.3,
+			"position": [300, 240]
+		},
+		{
+			"parameters": {
+				"endpointUrl": "https://api.presentations.ai/mcp",
+				"serverTransport": "httpStreamable",
+				"authentication": "bearerAuth",
+				"include": "selected",
+				"options": {
+					"timeout": 180000
+				},
+				"includeTools": [
+					"whoami",
+					"create_presentation",
+					"get_task",
+					"get_export",
+					"list_decks",
+					"get_deck",
+					"search_brand_kits",
+					"list_projects"
+				]
+			},
+			"id": "736b1553-b7b1-46b8-96f9-45c1c5e79c09",
+			"name": "Presentations.AI MCP",
+			"type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+			"typeVersion": 1.2,
+			"position": [460, 240]
+		},
+		{
+			"parameters": {
+				"content": "## Make presentations by chatting\n\n### How it works\nA chat assistant that makes presentations. You describe what you need; the **Presentation assistant** agent uses the Presentations.AI MCP server to create the presentation, check on it until it's ready and reply with a download link. Because the agent chooses its own steps, it can also apply a brand kit or find presentations you made earlier. **Conversation memory** lets follow-up messages such as \"now make one for the sales team\" build on the last one.\n\n### Setup\n1. In **Planning model**, select a credential for your model provider, or swap in another chat model sub-node.\n2. In **Presentations.AI MCP**, either create a Bearer Auth credential with an API key from [api.presentations.ai](https://api.presentations.ai/#/apikeys) (the **Deck automation** preset is enough), or switch Authentication to MCP OAuth2 with **Use Dynamic Client Registration** on and **Server URL** `https://api.presentations.ai/mcp`, then sign in.\n3. Open the chat and ask, for example: *Make a 6-slide deck introducing example.com to new customers.*\n\n### Customization\n**Tools to Include** gives the agent only the tools it needs, so it can't delete, edit, share or grant access to presentations, and new server tools aren't added without you. Add `share_deck` only if you want the agent to create public links (anyone with one can view); add `create_outline` (uses credits) for outlines first. Download links expire after 15 minutes. Creating presentations and outlines uses Presentations.AI credits.",
+				"width": 520,
+				"height": 640,
+				"color": 1
+			},
+			"id": "c9451daa-dc54-4622-99b3-8e1153524e19",
+			"name": "Overview",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-620, -200]
+		},
+		{
+			"id": "bfe19699-7bbc-467e-aebb-f29621ebc701",
+			"name": "Agent tools",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [80, 160],
+			"parameters": {
+				"content": "## Model, memory and Presentations.AI tools\nThe agent plans with the chat model and acts through the MCP tools. Creating presentations spends credits.",
+				"width": 520,
+				"height": 240,
+				"color": 7
+			}
+		}
+	],
+	"connections": {
+		"Chat with the assistant": {
+			"main": [
+				[
+					{
+						"node": "Presentation assistant",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Planning model": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "Presentation assistant",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Conversation memory": {
+			"ai_memory": [
+				[
+					{
+						"node": "Presentation assistant",
+						"type": "ai_memory",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Presentations.AI MCP": {
+			"ai_tool": [
+				[
+					{
+						"node": "Presentation assistant",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"pinData": {},
+	"settings": {
+		"executionOrder": "v1"
+	}
+}
