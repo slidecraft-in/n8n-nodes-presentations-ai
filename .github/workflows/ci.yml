@@ -21,7 +21,9 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 'lts/*'
+          # n8n requires Node.js 24. 'lts/*' now resolves to 26, where the
+          # isolated-vm dev dependency doesn't build.
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
