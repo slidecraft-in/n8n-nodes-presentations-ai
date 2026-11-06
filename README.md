@@ -2,7 +2,7 @@
 
 Official [n8n](https://n8n.io) community node for [Presentations.AI](https://presentations.ai). Create slide decks from a topic, a piece of text or a document, and get the finished PPTX, PDF or slide images back as a file in your workflow.
 
-> **Upgrading from 0.2.x?** Presentations.AI switched off the API that 0.2.x used on 5 November 2026, so every 0.2.x workflow and credential test now fails. Update to 0.3.0, **create a new API key** (keys from the old API don't work), and read [Upgrading from 0.2.x](#upgrading-from-02x).
+> **Upgrading from 0.2.x?** Presentations.AI switched off the API that 0.2.x used on 5 November 2026, so every 0.2.x workflow and credential test now fails. Update to 0.3.1, **create a new API key** (keys from the old API don't work), and read [Upgrading from 0.2.x](#upgrading-from-02x).
 
 ## Installation
 
@@ -212,7 +212,7 @@ Files are the exception: Presentations.AI's MCP server doesn't take file uploads
 
 ## Upgrading from 0.2.x
 
-Presentations.AI removed the API that 0.2.x used on 5 November 2026, so 0.2.x workflows and the credential **Test** button fail. Update the package to 0.3.0. The node version is still 1, operations keep their names, and most saved settings carry over. Check these changes:
+Presentations.AI removed the API that 0.2.x used on 5 November 2026, so 0.2.x workflows and the credential **Test** button fail. Update the package to 0.3.1. The node version is still 1, operations keep their names, and most saved settings carry over. Check these changes:
 
 - **API key.** Keys from the old API don't work any more. Create a new key at [api.presentations.ai](https://api.presentations.ai/#/apikeys) (it starts with `pai_live_`) and paste it into your Presentations.AI credential.
 - **Waiting and output.** Create operations now wait for the deck and return the file in binary field `data` by default. The JSON is the new response (see [Output](#output)), so update expressions that read the old fields: use `request_id` for the old job ID, `status_url` for the old poll URL, and `share_url` for a public link. Turn **Simplify** off to get the full response.
