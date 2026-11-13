@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. Format foll
 ### Changed
 
 - **Language** defaults to `auto` in version 2, so the presentation follows the language of the topic, text or file. Version 1 keeps English.
+- The node and credential icons now use the official Presentations.AI logo, in light and dark mode.
 
 ## [0.3.2] - 2026-11-13
 
