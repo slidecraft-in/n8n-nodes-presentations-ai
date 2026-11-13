@@ -2,7 +2,7 @@
 
 Official [n8n](https://n8n.io) community node for [Presentations.AI](https://presentations.ai). Create slide decks from a topic, a piece of text or a document, and get the finished PPTX, PDF or slide images back as a file in your workflow.
 
-> **Upgrading from 0.2.x?** Presentations.AI switched off the API that 0.2.x used on 5 November 2026, so every 0.2.x workflow and credential test now fails. Update to 0.3.1, **create a new API key** (keys from the old API don't work), and read [Upgrading from 0.2.x](#upgrading-from-02x).
+> **Upgrading from 0.2.x?** Presentations.AI switched off the API that 0.2.x used on 5 November 2026, so every 0.2.x workflow and credential test now fails. Update to the latest version, **create a new API key** (keys from the old API don't work), and read [Upgrading from 0.2.x](#upgrading-from-02x).
 
 ## Installation
 
@@ -41,17 +41,18 @@ Operation-specific fields:
 
 Fields on every create operation:
 
-| Field                   | Default | What it does                                                                                                                                                                                                                                                                                                                            |
-| ----------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Export Format**       | PPTX    | **PPTX** (editable slides), **PDF**, or **Image** (a ZIP file with one image per slide).                                                                                                                                                                                                                                                |
-| **Target Audience**     | Auto    | **Auto** lets Presentations.AI work out the audience from the topic and content, or pick Clients / Customers, Executive Leadership, General Audience, General Employees, Students / Trainees or Technical Team. Shapes depth, wording and examples. An expression can pass any short description instead, such as `Series A investors`. |
-| **Language**            | English | The language name in English, such as `Spanish` or `Japanese`. Use `auto` to match the source. Two-letter codes such as `es` also work.                                                                                                                                                                                                 |
-| **Company Domain**      | (empty) | Web domain of the company the deck is about, such as `example.com`. Used for research and to match the company's branding.                                                                                                                                                                                                              |
-| **Wait for Completion** | On      | Wait until the deck is ready before continuing. Turn it off to get a request ID straight away and check on it later with **Job → Get Status**.                                                                                                                                                                                          |
-| **Max Wait (Seconds)**  | 600     | The longest time to wait. If the deck isn't ready by then, the node returns it with status `RUNNING` so a later Get Status can pick it up.                                                                                                                                                                                              |
-| **Download File**       | On      | Put the finished file in the item's binary data.                                                                                                                                                                                                                                                                                        |
-| **Create Share Link**   | Off     | Create a share link once the deck is ready. **The link is public**: anyone who has it can view the deck. A notice under the toggle repeats this.                                                                                                                                                                                        |
-| **Simplify**            | On      | Return the ten most useful fields instead of the full response. See [Output](#output).                                                                                                                                                                                                                                                  |
+| Field                   | Default                                 | What it does                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ----------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Export Format**       | PPTX                                    | **PPTX** (editable slides), **PDF**, or **Image** (a ZIP file with one image per slide).                                                                                                                                                                                                                                                                                                                                   |
+| **Target Audience**     | Auto                                    | **Auto** lets Presentations.AI work out the audience from the topic and content, or pick Clients / Customers, Executive Leadership, General Audience, General Employees, Students / Trainees or Technical Team. Shapes depth, wording and examples. An expression can pass any short description instead, such as `Series A investors`.                                                                                    |
+| **Language**            | English (version 1), `auto` (version 2) | The language name in English, such as `Spanish` or `Japanese`, or `auto` to follow the language of the topic, text or file. Two-letter codes such as `es` also work. See [Node versions](#node-versions).                                                                                                                                                                                                                  |
+| **Company Domain**      | (empty)                                 | Web domain of the company the deck is about, such as `example.com`. Used for research and to match the company's branding.                                                                                                                                                                                                                                                                                                 |
+| **Visibility**          | Private                                 | Node version 2 only. Who can open the deck in Presentations.AI: **Private** (the API key's owner and people they share it with), **Project** (members of the project set under Options, or of the project the key is limited to) or **Workspace** (everyone in the key's workspace). Creating a share link changes the deck to Public: anyone with the link, and everyone in your Presentations.AI workspace, can view it. |
+| **Wait for Completion** | On                                      | Wait until the deck is ready before continuing. Turn it off to get a request ID straight away and check on it later with **Job → Get Status**.                                                                                                                                                                                                                                                                             |
+| **Max Wait (Seconds)**  | 600                                     | The longest time to wait. If the deck isn't ready by then, the node returns it with status `RUNNING` so a later Get Status can pick it up.                                                                                                                                                                                                                                                                                 |
+| **Download File**       | On                                      | Put the finished file in the item's binary data.                                                                                                                                                                                                                                                                                                                                                                           |
+| **Create Share Link**   | Off                                     | Create a share link once the deck is ready. **This makes the deck public**: anyone with the link, and everyone in your Presentations.AI workspace, can view it. A notice under the toggle repeats this.                                                                                                                                                                                                                    |
+| **Simplify**            | On                                      | Return the ten most useful fields instead of the full response. See [Output](#output).                                                                                                                                                                                                                                                                                                                                     |
 
 Max Wait, Download File and Create Share Link only show when Wait for Completion is on.
 
@@ -67,6 +68,17 @@ Under **Options → Add Option**:
 | **Put Output File in Field** | `data`   | Name of the binary field for the downloaded file.                                                                                                                                                    |
 | **Request ID**               | (empty)  | Your own ID for this deck. Sending the same ID with the same inputs again returns the original deck instead of making a new one. Leave it empty and the node creates one for each node run and item. |
 | **Speaker Notes**            | Off      | Write presenter notes for every slide.                                                                                                                                                               |
+
+### Node versions
+
+New Presentations.AI nodes are version 2. Nodes saved in workflows before 0.4.0 stay version 1 and keep working as before.
+
+| Setting              | Version 1                                             | Version 2                                               |
+| -------------------- | ----------------------------------------------------- | ------------------------------------------------------- |
+| **Language** default | English                                               | `auto`: follows the language of the topic, text or file |
+| **Visibility**       | Not sent, so decks are visible to the whole workspace | **Private** by default; choose Project or Workspace     |
+
+To move a saved workflow to version 2, add a new Presentations.AI node and copy the settings across.
 
 ### Preservation Mode
 
@@ -111,18 +123,18 @@ If a deck isn't ready when the node finishes (Wait for Completion off, or Max Wa
 
 **JSON.** With **Simplify** on (the default), the item's JSON has these ten fields:
 
-| Field             | Contents                                                                                                                  |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `status`          | `CREATED`, `RUNNING`, `COMPLETED` or `FAILED`.                                                                            |
-| `request_id`      | ID of this request. Use it with Get Status.                                                                               |
-| `deck_id`         | ID of the deck.                                                                                                           |
-| `deck_url`        | Opens the deck in Presentations.AI. **Not public**: only signed-in members of your workspace who have access can open it. |
-| `share_url`       | With Create Share Link on, a **public** link to view the deck. Otherwise `null`.                                          |
-| `export_format`   | `PPTX`, `PDF` or `IMAGE` once the file is ready, else `null`.                                                             |
-| `file_size_bytes` | Size of the finished file, else `null`.                                                                                   |
-| `stage`           | Progress: `QUEUED`, `OUTLINE`, `SLIDES`, `EXPORT`, `COMPLETED` or `FAILED`.                                               |
-| `status_url`      | Address for checking status. Get Status accepts it too.                                                                   |
-| `error`           | The reason, when `status` is `FAILED`.                                                                                    |
+| Field             | Contents                                                                                                                            |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `status`          | `CREATED`, `RUNNING`, `COMPLETED` or `FAILED`.                                                                                      |
+| `request_id`      | ID of this request. Use it with Get Status.                                                                                         |
+| `deck_id`         | ID of the deck.                                                                                                                     |
+| `deck_url`        | Opens the deck in Presentations.AI. **Not public**: only signed-in people who can access the deck can open it (see **Visibility**). |
+| `share_url`       | With Create Share Link on, a **public** link to view the deck. Otherwise `null`.                                                    |
+| `export_format`   | `PPTX`, `PDF` or `IMAGE` once the file is ready, else `null`.                                                                       |
+| `file_size_bytes` | Size of the finished file, else `null`.                                                                                             |
+| `stage`           | Progress: `QUEUED`, `OUTLINE`, `SLIDES`, `EXPORT`, `COMPLETED` or `FAILED`.                                                         |
+| `status_url`      | Address for checking status. Get Status accepts it too.                                                                             |
+| `error`           | The reason, when `status` is `FAILED`.                                                                                              |
 
 With **Simplify** off, the JSON is the full response from Presentations.AI (including `export` with `format`, `content_type`, `size_bytes` and a `download_url` that needs your API key, `warnings`, `created_at` and `updated_at`), plus `share_link` when Create Share Link is on.
 
@@ -140,7 +152,7 @@ Manual Trigger → Presentations.AI: Create From Topic → (email or storage nod
 n8n Form Trigger → Presentations.AI: Create From Topic → n8n Form (Form Ending: Return Binary File)
 ```
 
-**Document to deck.** Any node that outputs a file works: an HTTP Request node with Response Format set to File, a storage node's download operation, or a Form Trigger with a File field. Set **Input Binary Field** to that file's field name. A Form Trigger names the binary field after the form field's label, with spaces turned into underscores. A field labelled `Source Document` arrives as `Source_Document`.
+**Document to deck.** Any node that outputs a file works: an HTTP Request node with Response Format set to File, a storage node's download operation, or a Form Trigger with a File field. Set **Input Binary Field** to that file's field name. Form Trigger 2.4 and later names the binary field after the form field's Field Name (for example `report`). Without a Field Name, or in older versions, it uses the label with spaces turned into underscores, so `Source Document` arrives as `Source_Document`.
 
 ```
 (node that outputs a file) → Presentations.AI: Create From File
@@ -212,7 +224,7 @@ Files are the exception: Presentations.AI's MCP server doesn't take file uploads
 
 ## Upgrading from 0.2.x
 
-Presentations.AI removed the API that 0.2.x used on 5 November 2026, so 0.2.x workflows and the credential **Test** button fail. Update the package to 0.3.1. The node version is still 1, operations keep their names, and most saved settings carry over. Check these changes:
+Presentations.AI removed the API that 0.2.x used on 5 November 2026, so 0.2.x workflows and the credential **Test** button fail. Update the package to the latest version. The node version is still 1, operations keep their names, and most saved settings carry over. Check these changes:
 
 - **API key.** Keys from the old API don't work any more. Create a new key at [api.presentations.ai](https://api.presentations.ai/#/apikeys) (it starts with `pai_live_`) and paste it into your Presentations.AI credential.
 - **Waiting and output.** Create operations now wait for the deck and return the file in binary field `data` by default. The JSON is the new response (see [Output](#output)), so update expressions that read the old fields: use `request_id` for the old job ID, `status_url` for the old poll URL, and `share_url` for a public link. Turn **Simplify** off to get the full response.

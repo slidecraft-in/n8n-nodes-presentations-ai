@@ -18,7 +18,7 @@ const properties: INodeProperties[] = [
 		typeOptions: { rows: 8 },
 		required: true,
 		default: '',
-		placeholder: 'Paste the text to turn into slides…',
+		placeholder: 'e.g. Paste an article, notes or a transcript',
 		description:
 			'Text to build the presentation from, such as an article, notes or a meeting transcript (up to 200,000 characters)',
 	},

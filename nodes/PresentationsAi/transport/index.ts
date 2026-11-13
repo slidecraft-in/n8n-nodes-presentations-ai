@@ -94,8 +94,17 @@ function toApiError(node: INode, error: unknown): NodeApiError {
 		body.code === 'UNAUTHENTICATED' || body.code === 'INVALID_TOKEN'
 			? 'Create a new API key at https://api.presentations.ai/#/apikeys and update the Presentations.AI credential. Keys from the previous API no longer work'
 			: undefined;
+	const hint =
+		keyHint ??
+		(httpCode === '402'
+			? "Your Presentations.AI workspace has no credits left. Add credits or upgrade, then run the node again. Only create operations use credits"
+			: body.code === 'REQUEST_ID_CONFLICT'
+				? "This Request ID was already used with different inputs. Leave 'Request ID' empty, or use one that is unique for each item"
+				: body.code === 'FORBIDDEN'
+					? "Your API key doesn't allow this. Create a key with the Deck automation preset at https://api.presentations.ai/#/apikeys. A key limited to one project can only create in that project"
+					: undefined);
 	const description = [
-		keyHint,
+		hint,
 		fieldErrors,
 		body.code && `Code: ${body.code}`,
 		body.trace_id && `Trace ID: ${body.trace_id}`,

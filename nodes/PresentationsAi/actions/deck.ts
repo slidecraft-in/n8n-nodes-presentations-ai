@@ -201,10 +201,33 @@ export async function createDeckForItem(
 		speakerNotes: options.speakerNotes === true,
 		brandKitId: locatorValue(options.brandKitId),
 		projectId: locatorValue(options.projectId) || (await keyProject.call(this)),
+		// Version 1 sent no visibility, so its decks stay workspace-visible.
+		visibility:
+			this.getNode().typeVersion >= 2
+				? toText(this.getNodeParameter('visibility', itemIndex, 'private'))
+				: undefined,
 	});
+	if (body.visibility === 'PROJECT' && !body.project_id) {
+		throw new NodeOperationError(
+			this.getNode(),
+			"'Visibility' is 'Project', but no project is set",
+			{
+				itemIndex,
+				description:
+					"Choose a project in 'Project' under 'Options', or choose another 'Visibility'. A project is needed so Presentations.AI knows who can open the presentation.",
+			},
+		);
+	}
 
 	let upload: FileUpload | undefined;
 	if (file) {
+		const available = Object.keys(this.getInputData()[itemIndex]?.binary ?? {});
+		if (!available.includes(file.binaryProperty)) {
+			throw new NodeOperationError(this.getNode(), `No file in the '${file.binaryProperty}' field`, {
+				itemIndex,
+				description: `Set 'Input Binary Field' to the field that holds the file. This item has: ${available.join(', ') || 'no files'}. A Form Trigger names the field after the form field's Field Name.`,
+			});
+		}
 		const binary = this.helpers.assertBinaryData(itemIndex, file.binaryProperty);
 		upload = {
 			data: await this.helpers.getBinaryDataBuffer(itemIndex, file.binaryProperty),

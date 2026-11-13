@@ -5,7 +5,17 @@ import type {
 	DeckInputs,
 	DeckLevelOfDetail,
 	DeckModel,
+	DeckVisibility,
 } from '../types';
+
+const VISIBILITIES = new Set<DeckVisibility>(['PRIVATE', 'WORKSPACE', 'PROJECT']);
+
+// Unknown values are dropped rather than sent, so the API never makes a deck
+// public from this field.
+export function toVisibility(value: string | undefined): DeckVisibility | undefined {
+	const upper = value?.trim().toUpperCase() as DeckVisibility | undefined;
+	return upper && VISIBILITIES.has(upper) ? upper : undefined;
+}
 
 // Earlier versions offered ppt, render and share. The API now exports PPTX,
 // PDF or IMAGE only, so those legacy values fall back to PPTX; sharing is a
@@ -120,6 +130,9 @@ export function buildDeckRequest(inputs: DeckInputs): CreateDeckRequest {
 
 	const projectId = nonEmpty(inputs.projectId);
 	if (projectId) body.project_id = projectId;
+
+	const visibility = toVisibility(inputs.visibility);
+	if (visibility) body.visibility = visibility;
 
 	return body;
 }
