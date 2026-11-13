@@ -1,0 +1,172 @@
+{
+	"name": "RSS feed → Presentations.AI presentation → email share link",
+	"nodes": [
+		{
+			"parameters": {
+				"content": "## Turn new RSS posts into presentations\n\n### How it works\nThis workflow checks an RSS feed every hour. For each new post, Presentations.AI summarizes the post's text into a presentation and creates a public share link. The workflow then emails you the link. It uses the `content:encodedSnippet` field, the full post text with the HTML tags removed. Feeds that only publish a short summary have no such field, so the workflow falls back to `contentSnippet` (the short summary) and then to the title.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (tested with version 0.3.2). Follow [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/).\n2. Create an API key at [api.presentations.ai](https://api.presentations.ai/#/apikeys) with the **Deck automation** preset, then create a **Presentations.AI API** credential with it and select it on the Presentations.AI node. Presentations.AI charges credits per slide.\n3. Set **Feed URL** in the RSS Feed Trigger. The `https://example.com/feed.xml` value is a placeholder.\n4. Create an **SMTP** credential for **Email the share link** and set the From and To addresses (the `example.com` addresses are placeholders).\n5. Test the workflow, then activate it. The first run only picks up posts published after activation.\n\n### Customization\nChange **Preservation Mode** (Enhance builds a fuller deck from the text) or add **Slide Count**, **Brand Kit** and **Target Audience**. Set **Language** to a fixed language such as Spanish to translate the deck. Anyone with the share link can view the presentation. Send it to Slack or Notion instead of email by swapping the last node.",
+				"width": 560,
+				"height": 700,
+				"color": 1
+			},
+			"id": "5e6b13f9-c96c-5511-b725-d814ea509249",
+			"name": "Overview",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				-640,
+				-220
+			]
+		},
+		{
+			"parameters": {
+				"content": "## 1. Watch the feed\nPolls every hour. In a manual test it returns the latest post.",
+				"width": 280,
+				"height": 300,
+				"color": 7
+			},
+			"id": "17c0dde9-cb0d-5bad-965a-6011b4cad693",
+			"name": "Section: watch the feed",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				-40,
+				-100
+			]
+		},
+		{
+			"parameters": {
+				"content": "## 2. Create the presentation\n**Content** is the post's full text. **Topic or Instructions** is the post title. **Language** is `auto` so the deck follows the post's language. Each slide uses credits.",
+				"width": 340,
+				"height": 300,
+				"color": 7
+			},
+			"id": "17888a0d-235f-57c3-9db8-4e8ebc4b79a9",
+			"name": "Section: create the presentation",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				280,
+				-100
+			]
+		},
+		{
+			"parameters": {
+				"content": "## 3. Send the link\nThe email contains `share_url`. Anyone with the link can view the deck.",
+				"width": 280,
+				"height": 300,
+				"color": 7
+			},
+			"id": "9974341d-9538-515d-91cd-bf0bc430537f",
+			"name": "Section: send the link",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				660,
+				-100
+			]
+		},
+		{
+			"parameters": {
+				"pollTimes": {
+					"item": [
+						{
+							"mode": "everyX",
+							"value": 1,
+							"unit": "hours"
+						}
+					]
+				},
+				"feedUrl": "https://example.com/feed.xml"
+			},
+			"id": "2c4a0bab-f751-51da-8bd8-49bef01c53b1",
+			"name": "Watch the RSS feed for new posts",
+			"type": "n8n-nodes-base.rssFeedReadTrigger",
+			"typeVersion": 1,
+			"position": [
+				0,
+				0
+			]
+		},
+		{
+			"parameters": {
+				"resource": "presentation",
+				"operation": "createFromContent",
+				"content": "={{ $json['content:encodedSnippet'] || $json.contentSnippet || $json.title }}",
+				"topic": "={{ $json.title }}",
+				"preservationMode": "summarize",
+				"language": "auto",
+				"waitForCompletion": true,
+				"downloadFile": false,
+				"createShareLink": true,
+				"options": {}
+			},
+			"id": "a102cfd0-12d2-55a5-b211-5907ad94ec01",
+			"name": "Turn the post into a presentation",
+			"type": "@presentations-ai/n8n-nodes-presentations-ai.presentationsAi",
+			"typeVersion": 1,
+			"position": [
+				320,
+				0
+			],
+			"credentials": {
+				"presentationsAiApi": {
+					"name": "Presentations.AI API"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"fromEmail": "slides@example.com",
+				"toEmail": "you@example.com",
+				"subject": "={{ 'New presentation: ' + $('Watch the RSS feed for new posts').item.json.title }}",
+				"emailFormat": "text",
+				"text": "={{ 'Your presentation for \"' + $('Watch the RSS feed for new posts').item.json.title + '\" is ready:\\n' + $json.share_url + '\\n\\nAnyone with this link can view it.' }}",
+				"options": {}
+			},
+			"id": "e4bf0f95-b394-5219-b6d5-53d2031ac6c3",
+			"name": "Email the share link",
+			"type": "n8n-nodes-base.emailSend",
+			"typeVersion": 2.1,
+			"position": [
+				700,
+				0
+			],
+			"credentials": {
+				"smtp": {
+					"name": "SMTP account"
+				}
+			}
+		}
+	],
+	"connections": {
+		"Watch the RSS feed for new posts": {
+			"main": [
+				[
+					{
+						"node": "Turn the post into a presentation",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Turn the post into a presentation": {
+			"main": [
+				[
+					{
+						"node": "Email the share link",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"pinData": {},
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"meta": {
+		"templateCredsSetupCompleted": false
+	}
+}

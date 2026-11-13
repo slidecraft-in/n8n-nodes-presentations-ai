@@ -6,9 +6,12 @@
 			"name": "Overview",
 			"type": "n8n-nodes-base.stickyNote",
 			"typeVersion": 1,
-			"position": [-620, -200],
+			"position": [
+				-620,
+				-200
+			],
 			"parameters": {
-				"content": "## Make a presentation from a web form\n\n### How it works\nThis workflow turns a short web form into a finished presentation. Someone enters a topic, a slide count and a file format (PPTX, PDF or slide images). **Create the presentation** asks Presentations.AI to build it and waits until it's ready, which usually takes 2–4 minutes for 10 slides. The form's last page then sends the file to the person's browser, so they should keep the page open.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (0.3.1 or later) under **Settings → Community Nodes**. See [n8n's install guide](https://docs.n8n.io/integrations/community-nodes/installation-and-management/).\n2. Create an API key with the **Deck automation** preset at [api.presentations.ai](https://api.presentations.ai/#/apikeys) and select it in a **Presentations.AI API** credential on **Create the presentation**.\n3. Publish or activate the workflow and share the form's production URL. Each presentation uses Presentations.AI credits, charged per slide.\n\n### Customization\nAdd form fields for the audience or language and map them to the node. Turn on **Create Share Link** to give people a public link instead of a file. Raise **Max Wait (Seconds)** for very large presentations.",
+				"content": "## Make a presentation from a web form\n\n### How it works\nThis workflow turns a short web form into a finished presentation. Someone enters a topic, a slide count and a file format (PPTX, PDF or slide images). **Create the presentation** asks Presentations.AI to build it and waits until it's ready, which usually takes 2–4 minutes for 10 slides. The form's last page then sends the file to the person's browser, so they should keep the page open.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (tested with version 0.3.2). Follow [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/).\n2. Create an API key with the **Deck automation** preset at [api.presentations.ai](https://api.presentations.ai/#/apikeys) and select it in a **Presentations.AI API** credential on **Create the presentation**.\n3. Publish or activate the workflow and share the form's production URL. Each presentation uses Presentations.AI credits, charged per slide.\n\n### Customization\nAdd form fields for the audience or language and map them to the node. Turn on **Create Share Link** to give people a public link instead of a file. Raise **Max Wait (Seconds)** for very large presentations.",
 				"width": 520,
 				"height": 620,
 				"color": 1
@@ -58,16 +61,19 @@
 			"id": "1a88a5fc-6aa4-456e-8e2d-0f84a6923452",
 			"name": "Collect topic and format",
 			"type": "n8n-nodes-base.formTrigger",
-			"typeVersion": 2.3,
-			"position": [0, 0]
+			"typeVersion": 2.6,
+			"position": [
+				0,
+				0
+			]
 		},
 		{
 			"parameters": {
 				"resource": "presentation",
 				"operation": "createFromTopic",
 				"topic": "={{ $json.Topic }}",
-				"slideCount": "={{ $json['Slide Count'] }}",
-				"exportType": "={{ $json['Export Format'].toLowerCase() }}",
+				"slideCount": "={{ Math.min(Math.max(Number($json['Slide Count']) || 10, 1), 50) }}",
+				"exportType": "={{ ($json['Export Format'] || 'pptx').toLowerCase() }}",
 				"waitForCompletion": true,
 				"maxWaitSeconds": 600,
 				"downloadFile": true,
@@ -77,7 +83,15 @@
 			"name": "Create the presentation",
 			"type": "@presentations-ai/n8n-nodes-presentations-ai.presentationsAi",
 			"typeVersion": 1,
-			"position": [240, 0]
+			"position": [
+				240,
+				0
+			],
+			"credentials": {
+				"presentationsAiApi": {
+					"name": "Presentations.AI API"
+				}
+			}
 		},
 		{
 			"parameters": {
@@ -91,8 +105,11 @@
 			"id": "0d3f6b8e-4c1a-4f57-9a2e-7b6c5d4e3f21",
 			"name": "Send the file to the browser",
 			"type": "n8n-nodes-base.form",
-			"typeVersion": 2.3,
-			"position": [480, 0]
+			"typeVersion": 2.5,
+			"position": [
+				480,
+				0
+			]
 		}
 	],
 	"connections": {

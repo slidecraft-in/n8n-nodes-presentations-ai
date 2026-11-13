@@ -1,0 +1,361 @@
+{
+	"name": "Batch presentations with Presentations.AI Get Status",
+	"nodes": [
+		{
+			"parameters": {
+				"content": "## Start several presentations, then check them later\n\n### How it works\nThis workflow starts one presentation per topic without waiting, so the batch doesn't hold a single long request. Each presentation gets a request ID. After a 2-minute pause, **Check the presentation status** asks Presentations.AI how each one is doing and downloads the file when it's ready. **Route by status** sends finished presentations to **Collect the file** and stops the workflow if one failed. Anything still running goes back to **Wait 2 minutes** and is checked again.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (tested with version 0.3.2). Follow [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/).\n2. Create an API key at [api.presentations.ai](https://api.presentations.ai/#/apikeys) with the **Deck automation** preset, then create a **Presentations.AI API** credential with it and select it on the Presentations.AI node. Presentations.AI charges credits per slide.\n3. Click **Execute workflow**. It uses three example topics and creates three presentations, so it uses credits.\n\n### Customization\nReplace **List example topics** with your own source, such as a spreadsheet or database, and replace **Collect the file** with an upload to Drive or Slack. The loop stops after about 15 checks (about 30 minutes) through **Stop when it takes too long**, so a presentation that never finishes can't loop forever; change the number in **Route by status**. A failure stops the whole run. To keep the other presentations going, route **FAILED** to a notification instead of the stop node. Add **Slide Count**, **Brand Kit** or **Export Format** under the create node.",
+				"width": 560,
+				"height": 780,
+				"color": 1
+			},
+			"id": "a4b38d3b-d4f2-536a-99e1-b82c216a2e75",
+			"name": "Overview",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				-640,
+				-220
+			]
+		},
+		{
+			"parameters": {
+				"content": "## 1. Start the presentations\nCreate From Topic with **Wait for Completion** off returns right away with `request_id` and status.",
+				"width": 640,
+				"height": 320,
+				"color": 7
+			},
+			"id": "74104c7f-a830-524b-8eeb-33dcb0df66c9",
+			"name": "Section: start",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				-100,
+				-120
+			]
+		},
+		{
+			"parameters": {
+				"content": "## 2. Check until finished\nGet Status takes `request_id` and downloads the file when it's complete. COMPLETED goes on, FAILED stops, anything else waits and checks again.",
+				"width": 1040,
+				"height": 520,
+				"color": 7
+			},
+			"id": "4ccb02a8-6a3d-5de4-8015-641192279562",
+			"name": "Section: poll",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				580,
+				-120
+			]
+		},
+		{
+			"parameters": {},
+			"id": "2a677cfc-6089-5d17-88d4-3ab948678f3a",
+			"name": "Start manually",
+			"type": "n8n-nodes-base.manualTrigger",
+			"typeVersion": 1,
+			"position": [
+				-60,
+				0
+			]
+		},
+		{
+			"parameters": {
+				"jsCode": "return [\n  'Introducing example.com to new customers',\n  'Quarterly results for the Presentations.AI team',\n  'Onboarding plan for new support staff at example.com',\n].map((topic) => ({ json: { topic } }));"
+			},
+			"id": "10b6b528-fd27-5a98-b784-f4dbaf004fd7",
+			"name": "List example topics",
+			"type": "n8n-nodes-base.code",
+			"typeVersion": 2,
+			"position": [
+				160,
+				0
+			]
+		},
+		{
+			"parameters": {
+				"resource": "presentation",
+				"operation": "createFromTopic",
+				"topic": "={{ $json.topic }}",
+				"waitForCompletion": false,
+				"options": {}
+			},
+			"id": "4f85b1dc-01b8-5669-bf08-dd453105d9c1",
+			"name": "Start a presentation for each topic",
+			"type": "@presentations-ai/n8n-nodes-presentations-ai.presentationsAi",
+			"typeVersion": 1,
+			"position": [
+				400,
+				0
+			],
+			"credentials": {
+				"presentationsAiApi": {
+					"name": "Presentations.AI API"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"amount": 2,
+				"unit": "minutes"
+			},
+			"id": "1d548bac-60d2-5047-8b88-4a82a95e9eb0",
+			"name": "Wait 2 minutes",
+			"type": "n8n-nodes-base.wait",
+			"typeVersion": 1.1,
+			"position": [
+				640,
+				0
+			],
+			"webhookId": "f0419614-1874-57fa-b0bc-0bcf1340a6f7"
+		},
+		{
+			"parameters": {
+				"resource": "job",
+				"operation": "checkStatus",
+				"jobId": "={{ $json.request_id }}",
+				"downloadFile": true,
+				"options": {}
+			},
+			"id": "03004bf1-71e0-59e2-ac38-2ff2315ff8b6",
+			"name": "Check the presentation status",
+			"type": "@presentations-ai/n8n-nodes-presentations-ai.presentationsAi",
+			"typeVersion": 1,
+			"position": [
+				880,
+				0
+			],
+			"credentials": {
+				"presentationsAiApi": {
+					"name": "Presentations.AI API"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"rules": {
+					"values": [
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": true,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 3
+								},
+								"conditions": [
+									{
+										"id": "9a4719a5-b00d-5bc0-9992-b25512767a5d",
+										"leftValue": "={{ $json.status }}",
+										"rightValue": "COMPLETED",
+										"operator": {
+											"type": "string",
+											"operation": "equals"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "COMPLETED"
+						},
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": true,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 3
+								},
+								"conditions": [
+									{
+										"id": "65a41b09-c280-5e96-a338-dc3c9e38f4c4",
+										"leftValue": "={{ $json.status }}",
+										"rightValue": "FAILED",
+										"operator": {
+											"type": "string",
+											"operation": "equals"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "FAILED"
+						},
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": true,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 3
+								},
+								"conditions": [
+									{
+										"id": "638b0ffe-17e4-5181-a268-38c70a19845a",
+										"leftValue": "={{ $runIndex }}",
+										"rightValue": 14,
+										"operator": {
+											"type": "number",
+											"operation": "gte"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "Gave up"
+						}
+					]
+				},
+				"options": {
+					"fallbackOutput": "extra",
+					"renameFallbackOutput": "Still running"
+				}
+			},
+			"id": "7883cc0f-11c5-5257-8d47-f92ae15fafc2",
+			"name": "Route by status",
+			"type": "n8n-nodes-base.switch",
+			"typeVersion": 3.5,
+			"position": [
+				1120,
+				0
+			]
+		},
+		{
+			"parameters": {},
+			"id": "4a40a118-655b-5a7e-9b46-e7f72786f853",
+			"name": "Collect the file",
+			"type": "n8n-nodes-base.noOp",
+			"typeVersion": 1,
+			"position": [
+				1380,
+				-120
+			]
+		},
+		{
+			"parameters": {
+				"errorMessage": "={{ 'Presentation ' + $json.request_id + ' failed: ' + ($json.error || 'no reason given') }}"
+			},
+			"id": "750b469b-59cb-5f09-aec9-83e62e541f42",
+			"name": "Stop with the failure reason",
+			"type": "n8n-nodes-base.stopAndError",
+			"typeVersion": 1,
+			"position": [
+				1380,
+				40
+			]
+		},
+		{
+			"parameters": {
+				"errorMessage": "={{ 'Presentation ' + $json.request_id + ' was not ready after 30 minutes. Check it later with Get Status.' }}"
+			},
+			"id": "13b38e41-1654-5e1c-b30e-32333c034a09",
+			"name": "Stop when it takes too long",
+			"type": "n8n-nodes-base.stopAndError",
+			"typeVersion": 1,
+			"position": [
+				1380,
+				180
+			]
+		}
+	],
+	"connections": {
+		"Start manually": {
+			"main": [
+				[
+					{
+						"node": "List example topics",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"List example topics": {
+			"main": [
+				[
+					{
+						"node": "Start a presentation for each topic",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Start a presentation for each topic": {
+			"main": [
+				[
+					{
+						"node": "Wait 2 minutes",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Wait 2 minutes": {
+			"main": [
+				[
+					{
+						"node": "Check the presentation status",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Check the presentation status": {
+			"main": [
+				[
+					{
+						"node": "Route by status",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Route by status": {
+			"main": [
+				[
+					{
+						"node": "Collect the file",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Stop with the failure reason",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Stop when it takes too long",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Wait 2 minutes",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"pinData": {},
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"meta": {
+		"templateCredsSetupCompleted": false
+	}
+}
