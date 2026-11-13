@@ -39,7 +39,7 @@ export const slideCountField: INodeProperties = {
 	typeOptions: { minValue: 1, maxValue: 50 },
 	default: 10,
 	description:
-		"Number of slides including the cover (1–50). Ignored when 'Preservation Mode' is 'Preserve', where the source decides.",
+		"Number of slides including the cover (1–50). Credits are charged per slide. Ignored when 'Preservation Mode' is 'Preserve', where the source decides.",
 };
 
 export const preservationModeField: INodeProperties = {
@@ -112,6 +112,8 @@ const targetAudienceField: INodeProperties = {
 	hint: "Defaults to 'Auto', which works out the audience from the topic and content",
 };
 
+// n8n doesn't save parameters left at their default, so a new default would
+// change saved workflows. Version 1 keeps English; version 2 follows the input.
 const languageField: INodeProperties = {
 	displayName: 'Language',
 	name: 'language',
@@ -120,6 +122,55 @@ const languageField: INodeProperties = {
 	placeholder: 'e.g. Spanish',
 	description:
 		"Language of the slides as an English name, such as English, Spanish or Japanese. Use 'auto' to match the source. Two-letter codes such as 'es' also work.",
+	displayOptions: { show: { '@version': [1] } },
+};
+
+const languageFieldV2: INodeProperties = {
+	displayName: 'Language',
+	name: 'language',
+	type: 'string',
+	default: 'auto',
+	placeholder: 'e.g. Spanish',
+	description:
+		"Language of the slides. 'auto' follows the language of the topic, text or file. To choose one, enter its English name, such as Spanish or Japanese, or a two-letter code such as 'es'.",
+	displayOptions: { show: { '@version': [{ _cnd: { gte: 2 } }] } },
+};
+
+const versionOneNotice: INodeProperties = {
+	displayName:
+		"This is version 1 of the node: presentations are visible to your whole Presentations.AI workspace. To choose 'Visibility', add a new Presentations.AI node from the panel",
+	name: 'versionOneNotice',
+	type: 'notice',
+	default: '',
+	displayOptions: { show: { '@version': [1] } },
+};
+
+const visibilityField: INodeProperties = {
+	displayName: 'Visibility',
+	name: 'visibility',
+	type: 'options',
+	options: [
+		{
+			name: 'Private',
+			value: 'private',
+			description: "Only the API key's owner and people they invite in Presentations.AI",
+		},
+		{
+			name: 'Project',
+			value: 'project',
+			description:
+				"Members of the project chosen in 'Project' under 'Options', or of the project your API key is limited to",
+		},
+		{
+			name: 'Workspace',
+			value: 'workspace',
+			description: "Everyone in the API key's workspace",
+		},
+	],
+	default: 'private',
+	description:
+		"Who can open the presentation in Presentations.AI. Members of the project it's created in can always open it. Turning on 'Create Share Link' changes this to Public.",
+	displayOptions: { show: { '@version': [{ _cnd: { gte: 2 } }] } },
 };
 
 const domainField: INodeProperties = {
@@ -168,12 +219,13 @@ const createShareLinkField: INodeProperties = {
 	type: 'boolean',
 	default: false,
 	description:
-		'Whether to create a share link once the presentation is ready. The link is public: anyone who has it can view the presentation.',
+		"Whether to create a share link once the presentation is ready. This makes the presentation public, whatever 'Visibility' says: anyone with the link can view it.",
 	displayOptions: { show: { waitForCompletion: [true] } },
 };
 
 const shareLinkNotice: INodeProperties = {
-	displayName: 'Anyone who has the share link can view the presentation',
+	displayName:
+		"A share link makes the presentation public, whatever 'Visibility' says: anyone with the link can view it. Deleting the link later leaves it visible to your workspace",
 	name: 'shareLinkNotice',
 	type: 'notice',
 	default: '',
@@ -325,7 +377,10 @@ export const commonCreateFields: INodeProperties[] = [
 	exportTypeField,
 	targetAudienceField,
 	languageField,
+	languageFieldV2,
 	domainField,
+	versionOneNotice,
+	visibilityField,
 	waitForCompletionField,
 	maxWaitSecondsField,
 	downloadFileField,

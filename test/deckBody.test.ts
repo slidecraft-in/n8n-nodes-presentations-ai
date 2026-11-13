@@ -5,7 +5,28 @@ import {
 	toAudience,
 	toExportFormat,
 	toLanguageName,
+	toVisibility,
 } from '../nodes/PresentationsAi/helpers/deckBody';
+
+describe('toVisibility', () => {
+	it.each([
+		['private', 'PRIVATE'],
+		['workspace', 'WORKSPACE'],
+		['project', 'PROJECT'],
+		[' Private ', 'PRIVATE'],
+		['public', undefined],
+		['PUBLIC', undefined],
+		['', undefined],
+		[undefined, undefined],
+	])('%s -> %s', (input, expected) => {
+		expect(toVisibility(input)).toBe(expected);
+	});
+
+	it('is sent only when set', () => {
+		expect(buildDeckRequest({ topic: 't', visibility: 'private' }).visibility).toBe('PRIVATE');
+		expect(buildDeckRequest({ topic: 't' })).not.toHaveProperty('visibility');
+	});
+});
 
 describe('buildDeckRequest', () => {
 	it('maps a topic deck onto the API body', () => {
@@ -115,6 +136,8 @@ describe('buildDeckRequest', () => {
 			'level_of_detail',
 			'speaker_notes',
 			'brand_kit_id',
+			'project_id',
+			'visibility',
 		]);
 		const body = buildDeckRequest({
 			topic: 't',
@@ -130,6 +153,8 @@ describe('buildDeckRequest', () => {
 			levelOfDetail: 'BRIEF',
 			speakerNotes: true,
 			brandKitId: 'b',
+			projectId: 'p',
+			visibility: 'workspace',
 		});
 		for (const key of Object.keys(body)) expect(allowed.has(key)).toBe(true);
 	});

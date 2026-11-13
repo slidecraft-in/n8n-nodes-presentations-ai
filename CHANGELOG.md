@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Node version 2** for new nodes. Saved workflows keep version 1 and behave as before.
+- **Visibility** (version 2): who can open the presentation in Presentations.AI. **Private** (default), **Project** or **Workspace**. Choosing Project with no project set stops with a clear error before anything is created. Public decks are made only through **Create Share Link**.
+
+### Changed
+
+- **Language** defaults to `auto` in version 2, so the presentation follows the language of the topic, text or file. Version 1 keeps English.
+
 ## [0.3.2] - 2026-11-13
 
 ### Fixed

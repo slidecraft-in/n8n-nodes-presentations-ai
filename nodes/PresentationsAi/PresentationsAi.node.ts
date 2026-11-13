@@ -17,7 +17,10 @@ export class PresentationsAi implements INodeType {
 		name: 'presentationsAi',
 		icon: { light: 'file:presentations-ai.svg', dark: 'file:presentations-ai.dark.svg' },
 		group: ['transform'],
-		version: 1,
+		// Version 2 changes defaults (Language 'auto', Visibility 'Private'); saved
+		// version 1 nodes keep their behaviour.
+		version: [1, 2],
+		defaultVersion: 2,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description:
 			'Create AI-generated slide decks from a topic, text or document with Presentations.AI and get the finished file back',

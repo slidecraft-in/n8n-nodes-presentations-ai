@@ -15,6 +15,9 @@ export type DeckModel = 'STANDARD' | 'PRO' | 'ULTRA';
 
 export type DeckLevelOfDetail = 'BRIEF' | 'STANDARD' | 'DETAILED' | 'VERY_DETAILED';
 
+// PUBLIC is left out: the node makes a deck public only through Create Share Link.
+export type DeckVisibility = 'PRIVATE' | 'WORKSPACE' | 'PROJECT';
+
 export type TextSource = { type: 'text'; content: string };
 
 export type FileSource = { type: 'file'; file_id: string };
@@ -36,6 +39,7 @@ export type CreateDeckRequest = {
 	speaker_notes?: boolean;
 	brand_kit_id?: string;
 	project_id?: string;
+	visibility?: DeckVisibility;
 };
 
 export type ExternalDeckExportResponse = {
@@ -122,4 +126,5 @@ export type DeckInputs = {
 	speakerNotes?: boolean;
 	brandKitId?: string;
 	projectId?: string;
+	visibility?: string;
 };

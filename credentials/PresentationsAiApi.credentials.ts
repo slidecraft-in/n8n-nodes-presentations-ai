@@ -26,7 +26,7 @@ export class PresentationsAiApi implements ICredentialType {
 			typeOptions: { password: true },
 			default: '',
 			required: true,
-			placeholder: 'pai_live_...',
+			placeholder: 'e.g. pai_live_...',
 			description:
 				'Your Presentations.AI API key. Create one at https://api.presentations.ai/#/apikeys. Keys start with "pai_live_".',
 		},
