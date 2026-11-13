@@ -1,6 +1,6 @@
 {
 	"name": "@presentations-ai/n8n-nodes-presentations-ai",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"description": "n8n community node for Presentations.AI — generate, transform, and export AI-powered slide decks from a topic, raw text, or document.",
 	"license": "MIT",
 	"homepage": "https://presentations.ai",
@@ -53,8 +53,9 @@
 		]
 	},
 	"devDependencies": {
-		"@n8n/node-cli": "^0.55.5",
+		"@n8n/node-cli": "0.56.3",
 		"eslint": "9.29.0",
+		"n8n-workflow": "2.47.1",
 		"prettier": "3.8.3",
 		"release-it": "20.0.1",
 		"typescript": "5.9.3",

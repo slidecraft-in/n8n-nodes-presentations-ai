@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-11-13
+
+### Fixed
+
+- **Waiting for a presentation works again on current n8n.** On n8n 2.34 and later, including n8n Cloud, a create operation that had to keep checking on the presentation stopped with "sleepWithAbort is not a function". n8n 2.34 removed that helper. The node now uses n8n's `sleep`, works on older n8n too, and still stops promptly when you stop the workflow.
+- If 0.3.1 stopped with that error, the presentation was still created and charged. The error shows its Request ID: use **Job → Get Status** with that ID (turn on **Download File** for the file), or open the presentation in your Presentations.AI account. Running the workflow again creates, and charges for, a new one.
+- **Errors reach the error output on every n8n version.** With _On Error → Continue (using error output)_, n8n 2.33 and earlier sent the node's error items down the success output. They now go to the error output, as on newer n8n.
+
+### Changed
+
+- The hint for n8n's AI workflow builder uses the current field name.
+- Development uses n8n-workflow 2.47.1 and @n8n/node-cli 0.56.3.
+
 ## [0.3.1] - 2026-11-06
 
 ### Changed
