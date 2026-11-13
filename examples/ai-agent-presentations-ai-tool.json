@@ -1,0 +1,178 @@
+{
+	"name": "AI Agent makes a presentation with the Presentations.AI tool",
+	"nodes": [
+		{
+			"parameters": {
+				"content": "## Make presentations by chatting, with the Presentations.AI node as an agent tool\n\n### How it works\nA chat assistant that makes presentations. You describe what you need. The **Presentation assistant** (AI Agent) fills in the topic and slide count and calls **Create a presentation**, which is the Presentations.AI node used as a tool. The tool waits for the presentation and returns its link, which the agent sends to you. You sign in to Presentations.AI to open it. **Conversation memory** lets follow-up messages build on earlier ones.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (tested with version 0.3.2). Follow [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/).\n2. Create an API key at [api.presentations.ai](https://api.presentations.ai/#/apikeys) with the **Deck automation** preset, then create a **Presentations.AI API** credential with it and select it on the Presentations.AI node. Presentations.AI charges credits per slide.\n3. In **Chat model**, select a credential for your model provider, or swap in any other chat model sub-node.\n4. Open the chat and ask, for example: *Make a 6-slide presentation introducing example.com to new customers.*\n\n### Customization\nThe tool returns JSON only (n8n doesn't pass files through agent tools), so the agent shares the link instead of a file. The slide count is capped at 20 so a chat can't spend many credits at once. Add Brand Kit, Target Audience or Export Format under the tool's options, or add more Presentations.AI tools such as **Create From Content**. **Create Share Link** is off, so presentations stay private. Turning it on makes each presentation public: anyone with the link can view it.",
+				"width": 560,
+				"height": 760,
+				"color": 1
+			},
+			"id": "7e244096-fbc3-57a7-9d0b-0abc02c52e15",
+			"name": "Overview",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				-640,
+				-220
+			]
+		},
+		{
+			"parameters": {
+				"content": "## Agent, model, memory and tool\nThe agent plans with the chat model and acts through the Presentations.AI tool. The model fills **Topic** and **Slide Count** with `$fromAI`. Each presentation uses credits.",
+				"width": 680,
+				"height": 300,
+				"color": 7
+			},
+			"id": "e4f1a77d-9c7f-5330-b8d3-5409f67a705a",
+			"name": "Section: agent",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				100,
+				160
+			]
+		},
+		{
+			"parameters": {
+				"options": {}
+			},
+			"id": "f11e0774-8713-582f-950e-d4c499fd74e7",
+			"name": "Chat with the assistant",
+			"type": "@n8n/n8n-nodes-langchain.chatTrigger",
+			"typeVersion": 1.5,
+			"position": [
+				0,
+				0
+			],
+			"webhookId": "2d939e64-eaab-56cd-8c84-6764cddbd9ea"
+		},
+		{
+			"parameters": {
+				"options": {
+					"systemMessage": "You make presentations for the user with the Create a presentation tool.\n\n- If the topic is unclear, ask one short question first. Otherwise use sensible defaults, such as 10 slides.\n- Make one presentation per request. Call the tool once, and do not start a second presentation for the same request.\n- Each presentation uses credits, so never make more than 20 slides.\n- The tool waits until the presentation is ready, which can take a few minutes.\n- When it is ready, give the user the deck_url from the tool result. They need to sign in to Presentations.AI to open it. Do not create a public link.\n- If the status is CREATED or RUNNING, say it is still being made and give the user the request_id.\n- If the tool returns an error, tell the user the error message."
+				}
+			},
+			"id": "2182cbe7-629b-5e74-9d2e-a8c3c216178b",
+			"name": "Presentation assistant",
+			"type": "@n8n/n8n-nodes-langchain.agent",
+			"typeVersion": 3.1,
+			"position": [
+				260,
+				0
+			]
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"mode": "list",
+					"value": "gpt-5-mini"
+				},
+				"options": {}
+			},
+			"id": "c5551a77-b3ad-5894-ba2a-3c4b4cafbcd3",
+			"name": "Chat model",
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.3,
+			"position": [
+				160,
+				260
+			],
+			"credentials": {
+				"openAiApi": {
+					"name": "OpenAI account"
+				}
+			}
+		},
+		{
+			"parameters": {},
+			"id": "d5c8f128-66a1-55ea-8cba-e64e12387005",
+			"name": "Conversation memory",
+			"type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+			"typeVersion": 1.4,
+			"position": [
+				320,
+				260
+			]
+		},
+		{
+			"parameters": {
+				"resource": "presentation",
+				"operation": "createFromTopic",
+				"topic": "={{ $fromAI('topic', 'What the presentation is about, including the audience and anything to emphasise', 'string') }}",
+				"slideCount": "={{ Math.min(Math.max(Number($fromAI('slide_count', 'Number of slides including the cover, from 1 to 20. Use 10 if the user does not say', 'number')) || 10, 1), 20) }}",
+				"language": "auto",
+				"waitForCompletion": true,
+				"createShareLink": false,
+				"options": {}
+			},
+			"id": "1ce6547b-67e1-5b4b-937e-c4f9c499f7df",
+			"name": "Create a presentation",
+			"type": "@presentations-ai/n8n-nodes-presentations-ai.presentationsAiTool",
+			"typeVersion": 1,
+			"position": [
+				500,
+				260
+			],
+			"credentials": {
+				"presentationsAiApi": {
+					"name": "Presentations.AI API"
+				}
+			}
+		}
+	],
+	"connections": {
+		"Chat with the assistant": {
+			"main": [
+				[
+					{
+						"node": "Presentation assistant",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Chat model": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "Presentation assistant",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Conversation memory": {
+			"ai_memory": [
+				[
+					{
+						"node": "Presentation assistant",
+						"type": "ai_memory",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Create a presentation": {
+			"ai_tool": [
+				[
+					{
+						"node": "Presentation assistant",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"pinData": {},
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"meta": {
+		"templateCredsSetupCompleted": false
+	}
+}

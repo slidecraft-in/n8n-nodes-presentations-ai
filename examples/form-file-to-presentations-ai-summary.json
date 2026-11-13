@@ -1,0 +1,172 @@
+{
+	"name": "Form file upload → Presentations.AI summary presentation",
+	"nodes": [
+		{
+			"parameters": {
+				"content": "## Turn an uploaded report into a summary presentation\n\n### How it works\nSomeone uploads a PDF, Word or PowerPoint file in a web form. Presentations.AI reads it and creates a presentation that keeps the sections of the report and tightens them into key slides (**Summarize** mode). It follows the report's language. When the presentation is ready, the form's last page downloads it in the browser. This usually takes 2–4 minutes, so keep the page open.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (tested with version 0.3.2). Follow [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/).\n2. Create an API key at [api.presentations.ai](https://api.presentations.ai/#/apikeys) with the **Deck automation** preset, then create a **Presentations.AI API** credential with it and select it on the Presentations.AI node. Presentations.AI charges credits per slide.\n3. Click **Execute workflow** and upload a test file, or activate the workflow and share the production form URL.\n\n### Customization\nAllow more file types: the node accepts PDF, Word, PowerPoint, Excel, CSV, text, Markdown, HTML, JSON, EPUB, PNG and JPEG up to 150 MB, but not old .doc or .ppt files. Change **Preservation Mode** to Preserve to keep the report's structure, or set **Slide Count**, **Export Format** or **Brand Kit**. Turn on **Create Share Link** to give a link instead of a file. Raise **Max Wait (Seconds)** for very long reports.",
+				"width": 560,
+				"height": 700,
+				"color": 1
+			},
+			"id": "cebb41a8-fcec-53ee-b8d7-59fcd3ebabdd",
+			"name": "Overview",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				-640,
+				-220
+			]
+		},
+		{
+			"parameters": {
+				"content": "## 1. Upload\nThe form has one required file field. n8n names the binary field after the field's **Field Name**: `report`.",
+				"width": 280,
+				"height": 300,
+				"color": 7
+			},
+			"id": "83842c2c-4aac-586a-beba-7d9a9aeaac62",
+			"name": "Section: upload",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				-40,
+				-100
+			]
+		},
+		{
+			"parameters": {
+				"content": "## 2. Create the presentation\n**Input Binary Field** is `report`. **Language** is `auto`, so the deck follows the report.",
+				"width": 280,
+				"height": 300,
+				"color": 7
+			},
+			"id": "b8f6c95b-9f28-57e2-98ba-a02dfa437af6",
+			"name": "Section: create",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				280,
+				-100
+			]
+		},
+		{
+			"parameters": {
+				"content": "## 3. Return the file\nThe form's ending page returns the binary field `data`, where the node puts the finished file.",
+				"width": 300,
+				"height": 300,
+				"color": 7
+			},
+			"id": "fd4cd937-a97d-5dd6-bb99-4dc9430a6f46",
+			"name": "Section: return",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				600,
+				-100
+			]
+		},
+		{
+			"parameters": {
+				"formTitle": "Summarize a report as a presentation",
+				"formDescription": "Upload a PDF, Word or PowerPoint file. Presentations.AI turns it into a presentation. This usually takes 2–4 minutes, so keep this page open.",
+				"formFields": {
+					"values": [
+						{
+							"fieldLabel": "Report",
+							"fieldName": "report",
+							"fieldType": "file",
+							"multipleFiles": false,
+							"acceptFileTypes": ".pdf,.docx,.pptx",
+							"requiredField": true
+						}
+					]
+				},
+				"options": {}
+			},
+			"id": "00facba3-61c9-5504-948d-f7d9f879b55b",
+			"name": "Upload a report",
+			"type": "n8n-nodes-base.formTrigger",
+			"typeVersion": 2.6,
+			"position": [
+				0,
+				0
+			],
+			"webhookId": "c73fbbd3-161d-5663-8a49-4f22f703ddd1"
+		},
+		{
+			"parameters": {
+				"resource": "presentation",
+				"operation": "createFromFile",
+				"binaryProperty": "report",
+				"preservationMode": "summarize",
+				"language": "auto",
+				"waitForCompletion": true,
+				"downloadFile": true,
+				"options": {}
+			},
+			"id": "4a70cf5d-95c4-56db-9e18-71e24180f4c2",
+			"name": "Create a summary presentation",
+			"type": "@presentations-ai/n8n-nodes-presentations-ai.presentationsAi",
+			"typeVersion": 1,
+			"position": [
+				300,
+				0
+			],
+			"credentials": {
+				"presentationsAiApi": {
+					"name": "Presentations.AI API"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "completion",
+				"respondWith": "returnBinary",
+				"completionTitle": "Your presentation is ready",
+				"completionMessage": "The file is downloading now.",
+				"inputDataFieldName": "data",
+				"options": {}
+			},
+			"id": "a1a6ed59-1ae1-5b71-a3da-91c0c33b660e",
+			"name": "Return the file to the browser",
+			"type": "n8n-nodes-base.form",
+			"typeVersion": 2.5,
+			"position": [
+				620,
+				0
+			],
+			"webhookId": "b20aebfc-0734-558b-81e4-7688123deed9"
+		}
+	],
+	"connections": {
+		"Upload a report": {
+			"main": [
+				[
+					{
+						"node": "Create a summary presentation",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Create a summary presentation": {
+			"main": [
+				[
+					{
+						"node": "Return the file to the browser",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"pinData": {},
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"meta": {
+		"templateCredsSetupCompleted": false
+	}
+}
