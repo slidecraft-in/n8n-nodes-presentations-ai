@@ -2,17 +2,18 @@
 
 To import one, open a new workflow in n8n and use **⋯ → Import from File**. You can also copy the file's contents and paste them onto the canvas. None of the files contain credentials, so you'll pick your own after importing.
 
-The workflows that use this package need it installed first (tested with version 0.3.2; see [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/)). The newer templates use node versions from n8n 2.47. The Presentations.AI nodes are version 1. Creating decks uses credits from your Presentations.AI workspace.
+The workflows that use this package need it installed first (tested with version 0.3.2 and later; see [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/)). The newer templates use node versions from n8n 2.47. The Presentations.AI nodes are version 1. Creating decks uses credits from your Presentations.AI workspace.
 
 ## Form → Presentations.AI node → deck file
 
 [`form-to-presentations-ai-deck.json`](form-to-presentations-ai-deck.json)
 
 ```
-n8n Form Trigger → Presentations.AI: Create From Topic → n8n Form (Form Ending: Return Binary File)
+n8n Form Trigger → Presentations.AI: Create From Topic → Switch: ready? → n8n Form (Form Ending: Return Binary File)
+                                                                       └ not ready → n8n Form (Form Ending: "still being made")
 ```
 
-Someone fills in a form with **Topic**, **Slide Count** and **Export Format** (PPTX, PDF or Image). The Presentations.AI node creates the deck and waits for it. Then the form's last page downloads the file in their browser.
+Someone fills in a form with **Topic**, **Slide Count** (capped at 20) and **Export Format** (PDF, PPTX or Image). The Presentations.AI node creates the deck and waits for it. Then the form's last page downloads the file in their browser.
 
 Before you run it:
 
@@ -20,7 +21,9 @@ Before you run it:
 2. Open the **Create the presentation** node and select or create a **Presentations.AI API** credential.
 3. Click **Execute workflow** and fill in the test form. Publish or activate the workflow to use the production form URL.
 
-A deck usually takes 2–4 minutes, and the form page waits until it's ready. If the deck isn't ready within the node's **Max Wait (Seconds)** (600), the node returns without a file. The last page then fails with "No binary data with field data found". Raise Max Wait if you make large decks.
+A deck usually takes 2–4 minutes, and the form page waits until it's ready. If the deck isn't ready within the node's **Max Wait (Seconds)** (600), the form shows that it's still being made instead of an error. Raise Max Wait if you make large decks.
+
+Anyone with the form's production URL can make decks on your credits. Share it only with people you trust, or add authentication in the Form Trigger.
 
 ## AI Agent makes a deck via Presentations.AI MCP
 
@@ -53,9 +56,9 @@ Settings to know:
 
 Each template has an **Overview** note with setup steps. All of them were imported into n8n 2.47.5 and their parameters checked against the node definitions. The Presentations.AI steps were run with sample inputs (one slide each; triggers, form endings and email were replaced by placeholders), but no real form upload, browser download, feed or AI agent run has been tested yet.
 
-- [`rss-to-presentations-ai-share-link.json`](rss-to-presentations-ai-share-link.json): RSS Feed Trigger → **Create From Content** (Summarize, Language `auto`, share link) → Send Email with `share_url`.
-- [`form-file-to-presentations-ai-summary.json`](form-file-to-presentations-ai-summary.json): Form Trigger with a file upload → **Create From File** (Summarize, Language `auto`) → Form ending that returns the file.
+- [`rss-to-presentations-ai-email.json`](rss-to-presentations-ai-email.json): RSS Feed Trigger → **Create From Content** (Summarize, Language `auto`) → Switch: ready? → Send Email with `deck_url` (a Presentations.AI sign-in opens it). No public link is made; the overview note says how to opt in to one.
+- [`form-file-to-presentations-ai-summary.json`](form-file-to-presentations-ai-summary.json): Form Trigger with a file upload → **Create From File** (Summarize, Language `auto`) → Switch: ready? → Form ending that returns the file, or says it's still being made.
 - [`ai-agent-presentations-ai-tool.json`](ai-agent-presentations-ai-tool.json): Chat Trigger → AI Agent with this node as a tool (**Create From Topic**, topic and slide count filled by the model), a chat model and Simple Memory. The agent replies with the presentation link and doesn't create a public share link.
-- [`batch-presentations-ai-get-status.json`](batch-presentations-ai-get-status.json): starts three presentations without waiting, then loops Wait → **Job → Get Status** → Switch until each is `COMPLETED` (continue) or `FAILED` (stop).
+- [`batch-presentations-ai-get-status.json`](batch-presentations-ai-get-status.json): starts three presentations without waiting, then loops Wait → **Job → Get Status** → Switch until each is `COMPLETED` (collected) or `FAILED` (collected with its error, without stopping the others). It gives up after 14 rounds.
 
 > Checked against n8n's node source. The MCP Client node was run with read-only calls; an agent run is still to do.
