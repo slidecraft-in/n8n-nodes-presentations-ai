@@ -1,6 +1,13 @@
 import type { IDataObject } from 'n8n-workflow';
 
-import type { ApiErrorBody, DeckExportFormat, GeneratedDeckResponse, ShareLink } from '../types';
+import type {
+	ApiErrorBody,
+	Deck,
+	DeckDetail,
+	DeckExportFormat,
+	GeneratedDeckResponse,
+	ShareLink,
+} from '../types';
 
 const EXTENSION_BY_FORMAT: Record<DeckExportFormat, string> = {
 	PPTX: 'pptx',
@@ -155,6 +162,37 @@ export function simplifyDeckResponse(
 		stage: response.stage,
 		status_url: response.status_url,
 		error: response.error,
+	};
+}
+
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+
+// A presentation picker gives an ID, or a URL with the ID in its path (the
+// deck_url, or the address of the presentation in the browser). The last ID in
+// the path is the presentation's.
+export function deckIdFrom(value: unknown): string {
+	const text = locatorValue(value);
+	if (!/^https?:\/\//i.test(text)) return text;
+	const path = text.replace(/^https?:\/\/[^/?#]*/i, '').split(/[?#]/)[0];
+	return path.match(UUID)?.pop() ?? '';
+}
+
+// Ten fields of a presentation, for Get, Get Many and Update. The API returns
+// more than ten, so n8n's UX guidelines ask for this behind "Simplify".
+export function simplifyDeck(deck: Deck | DeckDetail): IDataObject {
+	const detail = deck as Partial<DeckDetail>;
+	return {
+		id: deck.id,
+		name: deck.name,
+		...(detail.status ? { status: detail.status } : {}),
+		visibility: deck.visibility,
+		project_id: deck.project_id ?? null,
+		deck_url: deck.deck_url ?? null,
+		has_share_link: deck.has_share_link ?? false,
+		...(detail.exports ? { export_formats: detail.exports.map((e) => e.format) } : {}),
+		created_at: deck.created_at,
+		updated_at: deck.updated_at,
+		...(detail.exports ? {} : { starred: (deck.flags ?? []).includes('STARRED') }),
 	};
 }
 

@@ -3,6 +3,7 @@ import { NodeOperationError } from 'n8n-workflow';
 
 import { toNodeError } from './errors';
 import * as job from './job';
+import * as outline from './outline';
 import * as presentation from './presentation';
 
 type OperationHandler = (
@@ -14,11 +15,20 @@ const handlers: Record<string, Record<string, OperationHandler>> = {
 	presentation: {
 		createFromContent: presentation.createFromContent.execute,
 		createFromFile: presentation.createFromFile.execute,
+		createFromOutline: presentation.createFromOutline.execute,
 		createFromTopic: presentation.createFromTopic.execute,
 		createSingleSlide: presentation.createSingleSlide.execute,
+		download: presentation.download.execute,
+		get: presentation.get.execute,
+		getMany: presentation.getMany.execute,
+		getOutline: presentation.getOutline.execute,
+		update: presentation.update.execute,
 	},
 	job: {
 		checkStatus: job.checkStatus.execute,
+	},
+	outline: {
+		create: outline.create.execute,
 	},
 };
 

@@ -31,7 +31,7 @@ import {
 
 // An uploaded file has to finish text extraction before the deck can be
 // created, even when the node isn't waiting for the deck itself.
-const FILE_READY_TIMEOUT_SECONDS = 300;
+export const FILE_READY_TIMEOUT_SECONDS = 300;
 
 type CreateOptions = {
 	brandKitId?: unknown;
@@ -42,9 +42,18 @@ type CreateOptions = {
 	outputBinaryField?: string;
 	requestId?: string;
 	speakerNotes?: boolean;
+	name?: string;
+	company?: string;
+	insiderContent?: string;
+	purpose?: string;
+	delivery?: string;
+	missingFigures?: string;
+	qualityTier?: string;
+	deepResearch?: boolean;
+	allowedGraphics?: string;
 };
 
-type FileUpload = { data: Buffer; fileName: string; mimeType: string };
+export type FileUpload = { data: Buffer; fileName: string; mimeType: string };
 
 export async function toDeckItem(
 	this: IExecuteFunctions,
@@ -87,7 +96,7 @@ async function findExistingRequest(
 	}
 }
 
-async function uploadAndWait(
+export async function uploadAndWait(
 	this: IExecuteFunctions,
 	itemIndex: number,
 	upload: FileUpload,
@@ -162,7 +171,7 @@ async function keyProject(this: IExecuteFunctions): Promise<string | undefined> 
 	return await pending;
 }
 
-function clampWaitSeconds(value: unknown): number {
+export function clampWaitSeconds(value: unknown): number {
 	const seconds = Number(value);
 	if (!Number.isFinite(seconds)) return DEFAULT_MAX_WAIT_SECONDS;
 	return Math.min(Math.max(seconds, 1), MAX_WAIT_SECONDS);
@@ -170,9 +179,31 @@ function clampWaitSeconds(value: unknown): number {
 
 // The API falls back to the file extension when the type is generic, so the
 // upload always carries a name with one.
-function uploadFileName(binary: IBinaryData): string {
+export function uploadFileName(binary: IBinaryData): string {
 	if (binary.fileName) return binary.fileName;
 	return binary.fileExtension ? `document.${binary.fileExtension}` : 'document';
+}
+
+// The file in an item's binary field, ready to upload. Names the fields the
+// item does have when the expected one is missing.
+export async function readUpload(
+	this: IExecuteFunctions,
+	itemIndex: number,
+	binaryProperty: string,
+): Promise<FileUpload> {
+	const available = Object.keys(this.getInputData()[itemIndex]?.binary ?? {});
+	if (!available.includes(binaryProperty)) {
+		throw new NodeOperationError(this.getNode(), `No file in the '${binaryProperty}' field`, {
+			itemIndex,
+			description: `Set 'Input Binary Field' to the field that holds the file. This item has: ${available.join(', ') || 'no files'}. A Form Trigger names the field after the form field's Field Name.`,
+		});
+	}
+	const binary = this.helpers.assertBinaryData(itemIndex, binaryProperty);
+	return {
+		data: await this.helpers.getBinaryDataBuffer(itemIndex, binaryProperty),
+		fileName: uploadFileName(binary),
+		mimeType: binary.mimeType || 'application/octet-stream',
+	};
 }
 
 export async function createDeckForItem(
@@ -199,6 +230,15 @@ export async function createDeckForItem(
 		model: toText(options.model),
 		levelOfDetail: toText(options.levelOfDetail),
 		speakerNotes: options.speakerNotes === true,
+		name: toText(options.name),
+		company: toText(options.company),
+		insiderContent: toText(options.insiderContent),
+		purpose: toText(options.purpose),
+		delivery: toText(options.delivery),
+		missingFigures: toText(options.missingFigures),
+		qualityTier: toText(options.qualityTier),
+		deepResearch: options.deepResearch === true,
+		allowedGraphics: toText(options.allowedGraphics),
 		brandKitId: locatorValue(options.brandKitId),
 		projectId: locatorValue(options.projectId) || (await keyProject.call(this)),
 		// Version 1 sent no visibility, so its decks stay workspace-visible.
@@ -219,22 +259,7 @@ export async function createDeckForItem(
 		);
 	}
 
-	let upload: FileUpload | undefined;
-	if (file) {
-		const available = Object.keys(this.getInputData()[itemIndex]?.binary ?? {});
-		if (!available.includes(file.binaryProperty)) {
-			throw new NodeOperationError(this.getNode(), `No file in the '${file.binaryProperty}' field`, {
-				itemIndex,
-				description: `Set 'Input Binary Field' to the field that holds the file. This item has: ${available.join(', ') || 'no files'}. A Form Trigger names the field after the form field's Field Name.`,
-			});
-		}
-		const binary = this.helpers.assertBinaryData(itemIndex, file.binaryProperty);
-		upload = {
-			data: await this.helpers.getBinaryDataBuffer(itemIndex, file.binaryProperty),
-			fileName: uploadFileName(binary),
-			mimeType: binary.mimeType || 'application/octet-stream',
-		};
-	}
+	const upload = file ? await readUpload.call(this, itemIndex, file.binaryProperty) : undefined;
 
 	const customRequestId = toText(options.requestId).trim();
 	if (customRequestId && !isValidRequestId(customRequestId)) {
