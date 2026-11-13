@@ -24,7 +24,7 @@ export class PresentationsAi implements INodeType {
 		defaults: { name: 'Presentations.AI' },
 		usableAsTool: true,
 		builderHint: {
-			message:
+			searchHint:
 				"Creates presentations with Presentations.AI. Create operations wait for the presentation and return the file in the binary field 'data' (PPTX, PDF, or a ZIP of slide images) with JSON fields status, request_id, deck_url and share_url. With 'Wait for Completion' off they return at once; use the Job resource's 'Get Status' operation with request_id to check on it and download the file. Create From File needs a binary file from an earlier node.",
 		},
 		inputs: [NodeConnectionTypes.Main],

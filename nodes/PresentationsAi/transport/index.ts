@@ -9,7 +9,7 @@ import type {
 	INode,
 	JsonObject,
 } from 'n8n-workflow';
-import { NodeApiError, sleepWithAbort } from 'n8n-workflow';
+import { NodeApiError, sleep } from 'n8n-workflow';
 
 import {
 	buildExportFileName,
@@ -194,7 +194,10 @@ async function pollUntilSettled<T extends { status: AsyncTaskStatus | null }>(
 	while (!isSettled(latest.status)) {
 		const remaining = deadline - Date.now();
 		if (remaining <= 0) break;
-		await sleepWithAbort(Math.min(delay, remaining), signal);
+		// n8n 2.34 replaced sleepWithAbort with sleep(ms, signal), which stops at
+		// once. Older n8n's sleep ignores the signal, so check it after each wait.
+		await sleep(Math.min(delay, remaining), signal);
+		signal?.throwIfAborted();
 		delay = POLL_INTERVAL_MS;
 		try {
 			latest = await fetchLatest();

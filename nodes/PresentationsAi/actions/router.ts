@@ -41,13 +41,15 @@ export async function router(this: IExecuteFunctions): Promise<INodeExecutionDat
 		} catch (error) {
 			const nodeError = toNodeError.call(this, error, itemIndex);
 			if (this.continueOnFail() && !this.getExecutionCancelSignal()?.aborted) {
-				// Only `error` and `details`: n8n sends such items to the error output
-				// when the node is set to "Continue (using error output)".
+				// The item-level `error` is what sends an item to the error output under
+				// "Continue (using error output)" on every n8n version; n8n 2.33 and
+				// earlier don't recognise `{ error, details }` JSON on its own.
 				returnData.push({
 					json: {
 						error: nodeError.message,
 						...(nodeError.description ? { details: nodeError.description } : {}),
 					},
+					error: nodeError,
 					pairedItem: { item: itemIndex },
 				});
 				continue;
