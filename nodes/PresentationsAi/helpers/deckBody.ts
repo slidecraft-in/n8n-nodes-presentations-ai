@@ -134,5 +134,73 @@ export function buildDeckRequest(inputs: DeckInputs): CreateDeckRequest {
 	const visibility = toVisibility(inputs.visibility);
 	if (visibility) body.visibility = visibility;
 
+	const name = nonEmpty(inputs.name);
+	if (name) body.name = name;
+	const company = nonEmpty(inputs.company);
+	if (company) body.company = company;
+	const insider = nonEmpty(inputs.insiderContent);
+	if (insider) body.insider_content = insider;
+
+	const purpose = fromList(inputs.purpose, PURPOSES);
+	if (purpose) body.deck_purpose = purpose;
+	const delivery = fromList(inputs.delivery, DELIVERIES);
+	if (delivery) body.delivery = delivery;
+	const missing = fromList(inputs.missingFigures, MISSING_DATA);
+	if (missing) body.missing_data = missing as CreateDeckRequest['missing_data'];
+	// Standard is the API's default tier, so only the others are sent.
+	const tier = fromList(inputs.qualityTier, QUALITY_TIERS);
+	if (tier && tier !== 'standard') body.budget_tier = tier as CreateDeckRequest['budget_tier'];
+
+	const graphics = toGraphicTypes(inputs.allowedGraphics);
+	if (graphics.length) body.graphic_types = graphics;
+
+	if (inputs.outline) {
+		// An authored outline replaces the prompt and sources, and the API doesn't
+		// research for it.
+		body.outline = inputs.outline;
+		delete body.prompt;
+		delete body.sources;
+		delete body.slide_count;
+	} else if (inputs.deepResearch) {
+		body.deep_search = true;
+	}
+
 	return body;
+}
+
+// Values from the API's descriptions of these fields.
+export const PURPOSES = [
+	'pitch',
+	'sales',
+	'marketing',
+	'strategy',
+	'report',
+	'training',
+	'teaching',
+	'coursework',
+	'product',
+	'research',
+	'security',
+	'general',
+];
+export const DELIVERIES = ['stage', 'meeting', 'video', 'read', 'print'];
+const MISSING_DATA = ['placeholder', 'estimate'];
+const QUALITY_TIERS = ['lite', 'standard', 'premium'];
+
+// "auto", empty and unknown values send nothing, so the API decides.
+function fromList(value: string | undefined, allowed: string[]): string | undefined {
+	const key = value?.trim().toLowerCase();
+	return key && allowed.includes(key) ? key : undefined;
+}
+
+// Comma-separated graphic types, such as "table, list, diagram".
+export function toGraphicTypes(value: string | undefined): string[] {
+	return [
+		...new Set(
+			(value ?? '')
+				.split(',')
+				.map((part) => part.trim().toLowerCase())
+				.filter(Boolean),
+		),
+	];
 }

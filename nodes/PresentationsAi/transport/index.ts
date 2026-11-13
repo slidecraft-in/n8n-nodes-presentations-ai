@@ -20,9 +20,13 @@ import {
 import type {
 	AsyncTaskStatus,
 	CreateDeckRequest,
+	Deck,
+	DeckDetail,
+	DeckSource,
 	ExternalDeckExportResponse,
 	ExternalFileResponse,
 	GeneratedDeckResponse,
+	Page,
 	ShareLink,
 } from '../types';
 
@@ -81,6 +85,32 @@ export async function apiRequest(
 // Puts the API's own message ("Insufficient credits", field errors) in front
 // of n8n's generic status-code text. Re-wrapping a NodeApiError returns it
 // unchanged, so a new error is built from the response body instead.
+// What to do next for API error codes, by code. 402 (no credits) is matched by
+// HTTP status above.
+const CODE_HINTS: Record<string, string> = {
+	REQUEST_ID_CONFLICT:
+		"This Request ID was already used with different inputs. Leave 'Request ID' empty, or use one that is unique for each item",
+	FORBIDDEN:
+		"Your API key doesn't allow this. Create a key with the Deck automation preset at https://api.presentations.ai/#/apikeys. A key limited to one project can only create in that project",
+	FEATURE_NOT_IN_PLAN:
+		"Your Presentations.AI plan doesn't include an option you chose, such as a higher 'Model' tier or 'Deep Research'. Remove it, or upgrade the plan",
+	PLAN_LIMIT_EXCEEDED:
+		'This goes over a limit of your Presentations.AI plan. Make the request smaller, or upgrade the plan',
+	WORKSPACE_SUSPENDED:
+		'Your Presentations.AI workspace is suspended. Ask its owner or Presentations.AI support to restore it',
+};
+
+// Scopes listed in a 403's details, when the API sends them.
+function missingScopes(details: IDataObject | null | undefined): string | undefined {
+	if (!details) return undefined;
+	for (const key of ['required_scopes', 'missing_scopes', 'scopes']) {
+		const value = details[key];
+		if (Array.isArray(value) && value.length) return value.map(String).join(', ');
+		if (typeof value === 'string' && value.trim()) return value.trim();
+	}
+	return undefined;
+}
+
 function toApiError(node: INode, error: unknown): NodeApiError {
 	const body = getApiErrorBody(error);
 	const httpCode = getHttpStatus(error);
@@ -97,14 +127,12 @@ function toApiError(node: INode, error: unknown): NodeApiError {
 	const hint =
 		keyHint ??
 		(httpCode === '402'
-			? "Your Presentations.AI workspace has no credits left. Add credits or upgrade, then run the node again. Only create operations use credits"
-			: body.code === 'REQUEST_ID_CONFLICT'
-				? "This Request ID was already used with different inputs. Leave 'Request ID' empty, or use one that is unique for each item"
-				: body.code === 'FORBIDDEN'
-					? "Your API key doesn't allow this. Create a key with the Deck automation preset at https://api.presentations.ai/#/apikeys. A key limited to one project can only create in that project"
-					: undefined);
+			? 'Your Presentations.AI workspace has no credits left. Add credits or upgrade, then run the node again. Only creating presentations and outlines uses credits'
+			: (body.code && CODE_HINTS[body.code]) || undefined);
+	const scopes = missingScopes(body.details);
 	const description = [
 		hint,
+		scopes && `Scopes the API key needs: ${scopes}`,
 		fieldErrors,
 		body.code && `Code: ${body.code}`,
 		body.trace_id && `Trace ID: ${body.trace_id}`,
@@ -191,6 +219,69 @@ export async function createShareLink(this: IExecuteFunctions, deckId: string): 
 
 // Polls until the task settles or the deadline passes. Stopping the workflow
 // aborts the wait immediately.
+export type CreateOutlineBody = {
+	prompt?: string;
+	sources?: DeckSource[];
+	language?: string;
+	slide_count?: string;
+	level_of_detail?: string;
+};
+
+// POST /outlines bills the outline's slides once and persists nothing. The
+// Request-Id makes a retry safe: an ID that already paid gets 409.
+export async function createOutline(
+	this: IExecuteFunctions,
+	requestId: string,
+	body: CreateOutlineBody,
+): Promise<IDataObject> {
+	return (await apiRequest.call(this, 'POST', '/outlines', {
+		headers: { 'Request-Id': requestId },
+		body,
+	})) as IDataObject;
+}
+
+export async function getDeck(this: RequestContext, deckId: string): Promise<DeckDetail> {
+	return (await apiRequest.call(this, 'GET', `/decks/${encodeURIComponent(deckId)}`)) as DeckDetail;
+}
+
+export async function listDecks(
+	this: RequestContext,
+	qs: Record<string, string | number>,
+): Promise<Page<Deck>> {
+	return (await apiRequest.call(this, 'GET', '/decks', { qs })) as Page<Deck>;
+}
+
+export async function updateDeck(
+	this: IExecuteFunctions,
+	deckId: string,
+	body: IDataObject,
+): Promise<Deck> {
+	return (await apiRequest.call(this, 'PATCH', `/decks/${encodeURIComponent(deckId)}`, {
+		body,
+	})) as Deck;
+}
+
+export async function listExports(
+	this: IExecuteFunctions,
+	deckId: string,
+): Promise<ExternalDeckExportResponse[]> {
+	const page = (await apiRequest.call(this, 'GET', `/decks/${encodeURIComponent(deckId)}/exports`, {
+		qs: { page: 1, limit: 200 },
+	})) as Page<ExternalDeckExportResponse>;
+	return page.data;
+}
+
+export async function getDeckOutline(
+	this: IExecuteFunctions,
+	deckId: string,
+): Promise<IDataObject> {
+	return (await apiRequest.call(
+		this,
+		'GET',
+		`/decks/${encodeURIComponent(deckId)}/outline`,
+	)) as IDataObject;
+}
+
 async function pollUntilSettled<T extends { status: AsyncTaskStatus | null }>(
 	context: IExecuteFunctions,
 	current: T,

@@ -40,6 +40,16 @@ export type CreateDeckRequest = {
 	brand_kit_id?: string;
 	project_id?: string;
 	visibility?: DeckVisibility;
+	name?: string;
+	company?: string;
+	insider_content?: string;
+	deck_purpose?: string;
+	delivery?: string;
+	missing_data?: 'placeholder' | 'estimate';
+	budget_tier?: 'lite' | 'standard' | 'premium';
+	deep_search?: boolean;
+	graphic_types?: string[];
+	outline?: IDataObject;
 };
 
 export type ExternalDeckExportResponse = {
@@ -99,6 +109,31 @@ export type Project = {
 
 export type Page<T> = { data: T[]; page: number; limit: number; total: number };
 
+// GET /decks list item and PATCH /decks/{id} response.
+export type Deck = {
+	id: string;
+	workspace_id: string;
+	project_id: string | null;
+	created_by: string;
+	name: string;
+	visibility: DeckVisibility | 'PUBLIC';
+	thumbnail_url?: string | null;
+	deck_url?: string | null;
+	has_share_link?: boolean;
+	archived_at: string | null;
+	created_at: string;
+	updated_at: string;
+	flags?: string[];
+};
+
+// GET /decks/{id}: the list fields plus generation status and exports.
+export type DeckDetail = Deck & {
+	status: AsyncTaskStatus;
+	exports: ExternalDeckExportResponse[];
+};
+
+export type DeckSort = 'RECENT' | 'NAME' | 'UPDATED' | 'CREATED';
+
 export type ApiErrorBody = {
 	error?: {
 		code?: string;
@@ -127,4 +162,14 @@ export type DeckInputs = {
 	brandKitId?: string;
 	projectId?: string;
 	visibility?: string;
+	name?: string;
+	company?: string;
+	insiderContent?: string;
+	purpose?: string;
+	delivery?: string;
+	missingFigures?: string;
+	qualityTier?: string;
+	deepResearch?: boolean;
+	allowedGraphics?: string;
+	outline?: IDataObject;
 };

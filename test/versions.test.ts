@@ -18,12 +18,27 @@ function defaultsFor(typeVersion: number, operation: string) {
 	);
 }
 
-const CREATE_OPERATIONS = ['createFromTopic', 'createFromContent', 'createFromFile', 'createSingleSlide'];
+const CREATE_OPERATIONS = [
+	'createFromTopic',
+	'createFromContent',
+	'createFromFile',
+	'createSingleSlide',
+];
 
 describe('node versions', () => {
-	it('offers versions 1 and 2, with 2 for new nodes', () => {
-		expect(description.version).toEqual([1, 2]);
-		expect(description.defaultVersion).toBe(2);
+	it('offers versions 1, 2 and 3, with 3 for new nodes', () => {
+		expect(description.version).toEqual([1, 2, 3]);
+		expect(description.defaultVersion).toBe(3);
+	});
+
+	it.each([
+		[1, 'pptx'],
+		[2, 'pptx'],
+		[3, 'pdf'],
+	])('version %i defaults Export Format to %s', (typeVersion, format) => {
+		for (const operation of CREATE_OPERATIONS) {
+			expect(defaultsFor(typeVersion, operation)?.exportType).toBe(format);
+		}
 	});
 
 	it.each(CREATE_OPERATIONS)('version 1 %s keeps English and has no Visibility', (operation) => {
@@ -32,10 +47,12 @@ describe('node versions', () => {
 		expect(params).not.toHaveProperty('visibility');
 	});
 
-	it.each(CREATE_OPERATIONS)('version 2 %s defaults to auto and Private', (operation) => {
-		const params = defaultsFor(2, operation);
-		expect(params?.language).toBe('auto');
-		expect(params?.visibility).toBe('private');
+	it.each(CREATE_OPERATIONS)('versions 2 and 3 %s default to auto and Private', (operation) => {
+		for (const version of [2, 3]) {
+			const params = defaultsFor(version, operation);
+			expect(params?.language).toBe('auto');
+			expect(params?.visibility).toBe('private');
+		}
 	});
 
 	it('never offers public visibility', () => {

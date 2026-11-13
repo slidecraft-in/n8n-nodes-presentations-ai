@@ -4,7 +4,7 @@ import type {
 	INodeListSearchResult,
 } from 'n8n-workflow';
 
-import { apiRequest } from '../transport';
+import { apiRequest, listDecks } from '../transport';
 import type { BrandKitMatch, Page, Project } from '../types';
 
 const PAGE_SIZE = 50;
@@ -24,6 +24,25 @@ export async function searchBrandKits(
 		results: response.data.map((kit) => ({
 			name: kit.domain ? `${kit.name} (${kit.domain})` : kit.name,
 			value: kit.id,
+		})),
+		paginationToken: page * PAGE_SIZE < response.total ? String(page + 1) : undefined,
+	};
+}
+
+export async function searchPresentations(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+	paginationToken?: string,
+): Promise<INodeListSearchResult> {
+	const page = Number(paginationToken) || 1;
+	const qs: Record<string, string | number> = { page, limit: PAGE_SIZE, sort: 'RECENT' };
+	if (filter?.trim()) qs.search = filter.trim().slice(0, 200);
+	const response = await listDecks.call(this, qs);
+	return {
+		results: response.data.map((deck) => ({
+			name: deck.name || deck.id,
+			value: deck.id,
+			url: deck.deck_url ?? undefined,
 		})),
 		paginationToken: page * PAGE_SIZE < response.total ? String(page + 1) : undefined,
 	};
