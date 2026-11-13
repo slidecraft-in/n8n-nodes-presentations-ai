@@ -173,7 +173,7 @@ Read rows → Presentations.AI: Create From Topic (Wait for Completion off) → 
 Read rows without a file → Presentations.AI: Get Status (Download File on) → save the file when status is COMPLETED
 ```
 
-**Share a link instead of a file.** Turn Create Share Link on and Download File off, then post `{{ $json.share_url }}` to chat or email. Anyone with the link can view the deck.
+**Share a link instead of a file.** Turn Create Share Link on and Download File off, then post `{{ $json.share_url }}` to chat or email. Anyone with the link and everyone in your Presentations.AI workspace can view the deck.
 
 ## Use with AI agents
 

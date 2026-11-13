@@ -11,16 +11,16 @@
 				-200
 			],
 			"parameters": {
-				"content": "## Make a presentation from a web form\n\n### How it works\nThis workflow turns a short web form into a finished presentation. Someone enters a topic, a slide count and a file format (PPTX, PDF or slide images). **Create the presentation** asks Presentations.AI to build it and waits until it's ready, which usually takes 2–4 minutes for 10 slides. The form's last page then sends the file to the person's browser, so they should keep the page open.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (tested with version 0.3.2). Follow [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/).\n2. Create an API key with the **Deck automation** preset at [api.presentations.ai](https://api.presentations.ai/#/apikeys) and select it in a **Presentations.AI API** credential on **Create the presentation**.\n3. Publish or activate the workflow and share the form's production URL. Each presentation uses Presentations.AI credits, charged per slide.\n\n### Customization\nAdd form fields for the audience or language and map them to the node. Turn on **Create Share Link** to give people a public link instead of a file. Raise **Max Wait (Seconds)** for very large presentations.",
+				"content": "## Make a presentation from a web form\n\n### How it works\nThis workflow turns a short web form into a finished presentation. Someone enters a topic, a slide count (up to 20) and a file format (PDF, PPTX or slide images). **Create the presentation** asks Presentations.AI to build it and waits until it's ready, which usually takes 2–4 minutes for 10 slides. The form's last page then sends the file to the person's browser, so they should keep the page open. If it isn't ready within **Max Wait**, the form shows that it's still being made instead of an error.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (tested with version 0.3.2 and later). Follow [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/).\n2. Create an API key with the **Deck automation** preset at [api.presentations.ai](https://api.presentations.ai/#/apikeys) and select it in a **Presentations.AI API** credential on **Create the presentation**.\n3. Publish or activate the workflow and share the form's production URL. Each presentation uses Presentations.AI credits, charged per slide. PDF is the cheapest format: PPTX adds 5 credits a slide on plans without PowerPoint export.\n\n### Customization\nAdd form fields for the audience or language and map them to the node. To raise the 20-slide cap, change the expression in **Slide Count** (credits are charged per slide). Turn on **Create Share Link** to give people a public link instead of a file: anyone with the link and everyone in your workspace can view it. Raise **Max Wait (Seconds)** for very large presentations.\n\n### Cost and access\nAnyone with the form's production URL can make presentations on your Presentations.AI credits. Share it only with people you trust, or add authentication in the Form Trigger's settings.",
 				"width": 520,
-				"height": 620,
+				"height": 820,
 				"color": 1
 			}
 		},
 		{
 			"parameters": {
 				"formTitle": "Make a presentation",
-				"formDescription": "Presentations.AI builds your deck. It usually takes 2–4 minutes, so keep this page open. The file downloads when it's ready.",
+				"formDescription": "Presentations.AI builds your presentation. It usually takes 2–4 minutes, so keep this page open. The file downloads when it's ready.",
 				"formFields": {
 					"values": [
 						{
@@ -32,7 +32,7 @@
 						{
 							"fieldLabel": "Slide Count",
 							"fieldType": "number",
-							"placeholder": "Between 1 and 50",
+							"placeholder": "Between 1 and 20",
 							"defaultValue": "10",
 							"requiredField": true
 						},
@@ -42,10 +42,10 @@
 							"fieldOptions": {
 								"values": [
 									{
-										"option": "PPTX"
+										"option": "PDF"
 									},
 									{
-										"option": "PDF"
+										"option": "PPTX"
 									},
 									{
 										"option": "Image"
@@ -72,8 +72,8 @@
 				"resource": "presentation",
 				"operation": "createFromTopic",
 				"topic": "={{ $json.Topic }}",
-				"slideCount": "={{ Math.min(Math.max(Number($json['Slide Count']) || 10, 1), 50) }}",
-				"exportType": "={{ ($json['Export Format'] || 'pptx').toLowerCase() }}",
+				"slideCount": "={{ Math.min(Math.max(Number($json['Slide Count']) || 10, 1), 20) }}",
+				"exportType": "={{ ($json['Export Format'] || 'pdf').toLowerCase() }}",
 				"waitForCompletion": true,
 				"maxWaitSeconds": 600,
 				"downloadFile": true,
@@ -107,8 +107,69 @@
 			"type": "n8n-nodes-base.form",
 			"typeVersion": 2.5,
 			"position": [
+				720,
+				0
+			]
+		},
+		{
+			"parameters": {
+				"rules": {
+					"values": [
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": true,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 3
+								},
+								"conditions": [
+									{
+										"id": "53e4eb54-7880-5de2-8b05-d204ec7b063a",
+										"leftValue": "={{ $json.status }}",
+										"rightValue": "COMPLETED",
+										"operator": {
+											"type": "string",
+											"operation": "equals"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "Ready"
+						}
+					]
+				},
+				"options": {
+					"fallbackOutput": "extra",
+					"renameFallbackOutput": "Not ready in time"
+				}
+			},
+			"id": "570b0328-f4dd-5396-9416-400b8b0a4a2c",
+			"name": "Is the presentation ready?",
+			"type": "n8n-nodes-base.switch",
+			"typeVersion": 3.5,
+			"position": [
 				480,
 				0
+			]
+		},
+		{
+			"parameters": {
+				"operation": "completion",
+				"respondWith": "text",
+				"completionTitle": "Your presentation is still being made",
+				"completionMessage": "It took longer than this page can wait. It will be ready in Presentations.AI shortly; please don't submit the form again.",
+				"options": {}
+			},
+			"id": "622a74eb-7a09-51c4-96c2-43c70a52dece",
+			"name": "Show that it's still being made",
+			"type": "n8n-nodes-base.form",
+			"typeVersion": 2.5,
+			"position": [
+				720,
+				200
 			]
 		}
 	],
@@ -128,7 +189,25 @@
 			"main": [
 				[
 					{
+						"node": "Is the presentation ready?",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Is the presentation ready?": {
+			"main": [
+				[
+					{
 						"node": "Send the file to the browser",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Show that it's still being made",
 						"type": "main",
 						"index": 0
 					}

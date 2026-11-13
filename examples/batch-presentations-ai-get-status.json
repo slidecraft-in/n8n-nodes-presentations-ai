@@ -3,7 +3,7 @@
 	"nodes": [
 		{
 			"parameters": {
-				"content": "## Start several presentations, then check them later\n\n### How it works\nThis workflow starts one presentation per topic without waiting, so the batch doesn't hold a single long request. Each presentation gets a request ID. After a 2-minute pause, **Check the presentation status** asks Presentations.AI how each one is doing and downloads the file when it's ready. **Route by status** sends finished presentations to **Collect the file** and stops the workflow if one failed. Anything still running goes back to **Wait 2 minutes** and is checked again.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (tested with version 0.3.2). Follow [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/).\n2. Create an API key at [api.presentations.ai](https://api.presentations.ai/#/apikeys) with the **Deck automation** preset, then create a **Presentations.AI API** credential with it and select it on the Presentations.AI node. Presentations.AI charges credits per slide.\n3. Click **Execute workflow**. It uses three example topics and creates three presentations, so it uses credits.\n\n### Customization\nReplace **List example topics** with your own source, such as a spreadsheet or database, and replace **Collect the file** with an upload to Drive or Slack. The loop stops after about 15 checks (about 30 minutes) through **Stop when it takes too long**, so a presentation that never finishes can't loop forever; change the number in **Route by status**. A failure stops the whole run. To keep the other presentations going, route **FAILED** to a notification instead of the stop node. Add **Slide Count**, **Brand Kit** or **Export Format** under the create node.",
+				"content": "## Start several presentations, then check them later\n\n### How it works\nThis workflow starts one presentation per topic without waiting, so the batch doesn't hold a single long request. Each presentation gets a request ID. After a 2-minute pause, **Check the presentation status** asks Presentations.AI how each one is doing and downloads the file when it's ready. **Route by status** sends finished presentations to **Collect the file** and failed ones, with their `error`, to **Collect the failures**, so one failure doesn't stop the others. Anything still running goes back to **Wait 2 minutes** and is checked again.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (tested with version 0.3.2 and later). Follow [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/).\n2. Create an API key at [api.presentations.ai](https://api.presentations.ai/#/apikeys) with the **Deck automation** preset, then create a **Presentations.AI API** credential with it and select it on the Presentations.AI node. Presentations.AI charges credits per slide.\n3. Click **Execute workflow**. It uses three example topics and creates three presentations, so it uses credits.\n\n### Customization\nReplace **List example topics** with your own source, such as a spreadsheet or database, and replace **Collect the file** with an upload to Drive or Slack. The loop stops after about 15 checks (about 30 minutes) through **Stop when it takes too long**, so a presentation that never finishes can't loop forever; change the number in **Route by status**. Replace **Collect the failures** with a notification if you want to hear about them. Add **Slide Count**, **Brand Kit** or **Export Format** under the create node.",
 				"width": 560,
 				"height": 780,
 				"color": 1
@@ -35,7 +35,7 @@
 		},
 		{
 			"parameters": {
-				"content": "## 2. Check until finished\nGet Status takes `request_id` and downloads the file when it's complete. COMPLETED goes on, FAILED stops, anything else waits and checks again.",
+				"content": "## 2. Check until finished\nGet Status takes `request_id` and downloads the file when it's complete. COMPLETED goes on and FAILED goes to **Collect the failures** (each item keeps `error`), so one failure doesn't stop the others. Anything else waits and checks again.",
 				"width": 1040,
 				"height": 520,
 				"color": 7
@@ -237,19 +237,6 @@
 		},
 		{
 			"parameters": {
-				"errorMessage": "={{ 'Presentation ' + $json.request_id + ' failed: ' + ($json.error || 'no reason given') }}"
-			},
-			"id": "750b469b-59cb-5f09-aec9-83e62e541f42",
-			"name": "Stop with the failure reason",
-			"type": "n8n-nodes-base.stopAndError",
-			"typeVersion": 1,
-			"position": [
-				1380,
-				40
-			]
-		},
-		{
-			"parameters": {
 				"errorMessage": "={{ 'Presentation ' + $json.request_id + ' was not ready after 30 minutes. Check it later with Get Status.' }}"
 			},
 			"id": "13b38e41-1654-5e1c-b30e-32333c034a09",
@@ -259,6 +246,17 @@
 			"position": [
 				1380,
 				180
+			]
+		},
+		{
+			"parameters": {},
+			"id": "d2ed0d51-754a-5b67-bca6-0b18b3231a9d",
+			"name": "Collect the failures",
+			"type": "n8n-nodes-base.noOp",
+			"typeVersion": 1,
+			"position": [
+				1380,
+				40
 			]
 		}
 	],
@@ -329,7 +327,7 @@
 				],
 				[
 					{
-						"node": "Stop with the failure reason",
+						"node": "Collect the failures",
 						"type": "main",
 						"index": 0
 					}

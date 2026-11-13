@@ -3,9 +3,9 @@
 	"nodes": [
 		{
 			"parameters": {
-				"content": "## Turn an uploaded report into a summary presentation\n\n### How it works\nSomeone uploads a PDF, Word or PowerPoint file in a web form. Presentations.AI reads it and creates a presentation that keeps the sections of the report and tightens them into key slides (**Summarize** mode). It follows the report's language. When the presentation is ready, the form's last page downloads it in the browser. This usually takes 2–4 minutes, so keep the page open.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (tested with version 0.3.2). Follow [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/).\n2. Create an API key at [api.presentations.ai](https://api.presentations.ai/#/apikeys) with the **Deck automation** preset, then create a **Presentations.AI API** credential with it and select it on the Presentations.AI node. Presentations.AI charges credits per slide.\n3. Click **Execute workflow** and upload a test file, or activate the workflow and share the production form URL.\n\n### Customization\nAllow more file types: the node accepts PDF, Word, PowerPoint, Excel, CSV, text, Markdown, HTML, JSON, EPUB, PNG and JPEG up to 150 MB, but not old .doc or .ppt files. Change **Preservation Mode** to Preserve to keep the report's structure, or set **Slide Count**, **Export Format** or **Brand Kit**. Turn on **Create Share Link** to give a link instead of a file. Raise **Max Wait (Seconds)** for very long reports.",
+				"content": "## Turn an uploaded report into a summary presentation\n\n### How it works\nSomeone uploads a PDF, Word or PowerPoint file in a web form. Presentations.AI reads it and creates a presentation that keeps the sections of the report and tightens them into key slides (**Summarize** mode). It follows the report's language. When the presentation is ready, the form's last page downloads it in the browser. This usually takes 2–4 minutes, so keep the page open.\n\n### Setup\n1. Install the community node package `@presentations-ai/n8n-nodes-presentations-ai` (tested with version 0.3.2 and later). Follow [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/).\n2. Create an API key at [api.presentations.ai](https://api.presentations.ai/#/apikeys) with the **Deck automation** preset, then create a **Presentations.AI API** credential with it and select it on the Presentations.AI node. Presentations.AI charges credits per slide.\n3. Click **Execute workflow** and upload a test file, or activate the workflow and share the production form URL.\n\n### Customization\nAllow more file types: the node accepts PDF, Word, PowerPoint, Excel, CSV, text, Markdown, HTML, JSON, EPUB, PNG and JPEG up to 150 MB, but not old .doc or .ppt files. Change **Preservation Mode** to Preserve to keep the report's structure, or set **Slide Count**, **Export Format** or **Brand Kit**. Turn on **Create Share Link** to give a link instead of a file. Raise **Max Wait (Seconds)** for very long reports.\n\n### Cost and access\nAnyone with the form's production URL can make presentations on your Presentations.AI credits. Share it only with people you trust, or add authentication in the Form Trigger's settings.",
 				"width": 560,
-				"height": 700,
+				"height": 820,
 				"color": 1
 			},
 			"id": "cebb41a8-fcec-53ee-b8d7-59fcd3ebabdd",
@@ -61,7 +61,7 @@
 			"type": "n8n-nodes-base.stickyNote",
 			"typeVersion": 1,
 			"position": [
-				600,
+				880,
 				-100
 			]
 		},
@@ -132,10 +132,87 @@
 			"type": "n8n-nodes-base.form",
 			"typeVersion": 2.5,
 			"position": [
-				620,
+				920,
 				0
 			],
 			"webhookId": "b20aebfc-0734-558b-81e4-7688123deed9"
+		},
+		{
+			"parameters": {
+				"rules": {
+					"values": [
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": true,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 3
+								},
+								"conditions": [
+									{
+										"id": "d4592933-9670-53dd-beb1-25085728e46e",
+										"leftValue": "={{ $json.status }}",
+										"rightValue": "COMPLETED",
+										"operator": {
+											"type": "string",
+											"operation": "equals"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "Ready"
+						}
+					]
+				},
+				"options": {
+					"fallbackOutput": "extra",
+					"renameFallbackOutput": "Not ready in time"
+				}
+			},
+			"id": "13fbd82b-56ac-5c54-9bd5-82ca69a0fb60",
+			"name": "Is the presentation ready?",
+			"type": "n8n-nodes-base.switch",
+			"typeVersion": 3.5,
+			"position": [
+				620,
+				0
+			]
+		},
+		{
+			"parameters": {
+				"operation": "completion",
+				"respondWith": "text",
+				"completionTitle": "Your presentation is still being made",
+				"completionMessage": "It took longer than this page can wait. It will be ready in Presentations.AI shortly; please don't submit the form again.",
+				"options": {}
+			},
+			"id": "25507b74-4c40-5371-8aad-343a16dfa9c3",
+			"name": "Show that it's still being made",
+			"type": "n8n-nodes-base.form",
+			"typeVersion": 2.5,
+			"position": [
+				920,
+				200
+			]
+		},
+		{
+			"parameters": {
+				"content": "## Check it's ready\nIf the presentation isn't finished within **Max Wait**, the form says it's still being made instead of showing an error.",
+				"width": 260,
+				"height": 420,
+				"color": 7
+			},
+			"id": "32eba392-45d8-5712-a9e2-c0389b7f8f27",
+			"name": "Section: check it's ready",
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [
+				580,
+				-100
+			]
 		}
 	],
 	"connections": {
@@ -154,7 +231,25 @@
 			"main": [
 				[
 					{
+						"node": "Is the presentation ready?",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Is the presentation ready?": {
+			"main": [
+				[
+					{
 						"node": "Return the file to the browser",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Show that it's still being made",
 						"type": "main",
 						"index": 0
 					}
