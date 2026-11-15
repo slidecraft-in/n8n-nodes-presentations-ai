@@ -2,7 +2,7 @@
 
 To import one, open a new workflow in n8n and use **⋯ → Import from File**. You can also copy the file's contents and paste them onto the canvas. None of the files contain credentials, so you'll pick your own after importing.
 
-The workflows that use this package need it installed first (tested with version 0.3.2 and later; see [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/)). The newer templates use node versions from n8n 2.47. The Presentations.AI nodes are version 1. Creating decks uses credits from your Presentations.AI workspace.
+The workflows that use this package need it installed first (tested with version 0.3.2 and later; see [n8n's guide to installing verified community nodes](https://docs.n8n.io/integrations/community-nodes/installation/verified-install/)). The AI agent template that uses this node as a tool (`ai-agent-presentations-ai-tool.json`) uses node versions from n8n 2.47, so it needs n8n 2.47 or later. The Presentations.AI nodes are version 1. Creating decks uses credits from your Presentations.AI workspace.
 
 ## Form → Presentations.AI node → deck file
 
@@ -54,7 +54,7 @@ Settings to know:
 
 ## More templates
 
-Each template has an **Overview** note with setup steps. All of them were imported into n8n 2.47.5 and their parameters checked against the node definitions. The Presentations.AI steps were run with sample inputs (one slide each; triggers, form endings and email were replaced by placeholders), but no real form upload, browser download, feed or AI agent run has been tested yet.
+Each template has an **Overview** note with setup steps. All of them were imported into n8n 2.47.5 and their parameters checked against the node definitions. The form, RSS and batch templates were run on n8n 2.47.5 and 2.33.7 with this package's version 0.4.0 and sample inputs (one slide each; triggers, form endings and email were replaced by placeholders), including a presentation that isn't ready within Max Wait and one that fails. No real form upload, browser download, feed or AI agent run has been tested yet.
 
 - [`rss-to-presentations-ai-email.json`](rss-to-presentations-ai-email.json): RSS Feed Trigger → **Create From Content** (Summarize, Language `auto`) → Switch: ready? → Send Email with `deck_url` (a Presentations.AI sign-in opens it). No public link is made; the overview note says how to opt in to one.
 - [`form-file-to-presentations-ai-summary.json`](form-file-to-presentations-ai-summary.json): Form Trigger with a file upload → **Create From File** (Summarize, Language `auto`) → Switch: ready? → Form ending that returns the file, or says it's still being made.

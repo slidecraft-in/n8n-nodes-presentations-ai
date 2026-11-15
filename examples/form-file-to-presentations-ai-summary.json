@@ -175,7 +175,7 @@
 			"id": "13fbd82b-56ac-5c54-9bd5-82ca69a0fb60",
 			"name": "Is the presentation ready?",
 			"type": "n8n-nodes-base.switch",
-			"typeVersion": 3.5,
+			"typeVersion": 3.4,
 			"position": [
 				620,
 				0

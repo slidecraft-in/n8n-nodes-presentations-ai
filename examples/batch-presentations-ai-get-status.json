@@ -218,7 +218,7 @@
 			"id": "7883cc0f-11c5-5257-8d47-f92ae15fafc2",
 			"name": "Route by status",
 			"type": "n8n-nodes-base.switch",
-			"typeVersion": 3.5,
+			"typeVersion": 3.4,
 			"position": [
 				1120,
 				0
