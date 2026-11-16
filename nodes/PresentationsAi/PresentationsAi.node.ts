@@ -6,10 +6,17 @@ import type {
 } from 'n8n-workflow';
 import { NodeConnectionTypes } from 'n8n-workflow';
 
+import * as access from './actions/access';
+import * as account from './actions/account';
+import * as brandKit from './actions/brandKit';
+import * as file from './actions/file';
 import * as job from './actions/job';
+import * as outline from './actions/outline';
 import * as presentation from './actions/presentation';
+import * as project from './actions/project';
+import * as shareLink from './actions/shareLink';
 import { router } from './actions/router';
-import { searchBrandKits, searchProjects } from './methods/listSearch';
+import { searchBrandKits, searchPresentations, searchProjects } from './methods/listSearch';
 
 export class PresentationsAi implements INodeType {
 	description: INodeTypeDescription = {
@@ -17,10 +24,10 @@ export class PresentationsAi implements INodeType {
 		name: 'presentationsAi',
 		icon: { light: 'file:presentations-ai.svg', dark: 'file:presentations-ai.dark.svg' },
 		group: ['transform'],
-		// Version 2 changes defaults (Language 'auto', Visibility 'Private'); saved
-		// version 1 nodes keep their behaviour.
-		version: [1, 2],
-		defaultVersion: 2,
+		// Each version changes defaults; saved nodes keep the version they were
+		// made with. 2: Language 'auto', Visibility 'Private'. 3: Export Format PDF.
+		version: [1, 2, 3],
+		defaultVersion: 3,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description:
 			'Create AI-generated slide decks from a topic, text or document with Presentations.AI and get the finished file back',
@@ -40,18 +47,32 @@ export class PresentationsAi implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
+					{ name: 'Access', value: 'access' },
+					{ name: 'Account', value: 'account' },
+					{ name: 'Brand Kit', value: 'brandKit' },
+					{ name: 'File', value: 'file' },
 					{ name: 'Job', value: 'job' },
+					{ name: 'Outline', value: 'outline' },
 					{ name: 'Presentation', value: 'presentation' },
+					{ name: 'Project', value: 'project' },
+					{ name: 'Share Link', value: 'shareLink' },
 				],
 				default: 'presentation',
 			},
 			...presentation.description,
 			...job.description,
+			...outline.description,
+			...access.description,
+			...account.description,
+			...brandKit.description,
+			...file.description,
+			...project.description,
+			...shareLink.description,
 		],
 	};
 
 	methods = {
-		listSearch: { searchBrandKits, searchProjects },
+		listSearch: { searchBrandKits, searchPresentations, searchProjects },
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {

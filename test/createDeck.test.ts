@@ -31,7 +31,14 @@ function context(typeVersion: number, params: Params, keyProject: string | null 
 	const ctx = {
 		getNodeParameter: (name: string, _i: number, fallback?: unknown) =>
 			name in values ? values[name] : fallback,
-		getNode: () => ({ id: 'node-1', name: 'Presentations.AI', typeVersion, type: 't', position: [0, 0], parameters: {} }),
+		getNode: () => ({
+			id: 'node-1',
+			name: 'Presentations.AI',
+			typeVersion,
+			type: 't',
+			position: [0, 0],
+			parameters: {},
+		}),
 		getCredentials: async () => ({ apiKey: 'pai_live_test', baseUrl: 'https://api.example.com' }),
 		getInstanceId: () => 'instance-1',
 		getWorkflow: () => ({ id: 'workflow-1' }),
