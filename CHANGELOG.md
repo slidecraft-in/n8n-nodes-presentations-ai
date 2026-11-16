@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file. Format foll
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-16
+
+### Added
+
+- **Node version 3** for new nodes: **PDF** is the default Export Format, and a re-run with exactly the same inputs returns the presentation already made instead of charging again (change any input, or delete that presentation, to get a new one; a failed one is made again). Saved workflows keep their version and behave as before.
+- **Find and manage presentations:** Presentation → **Get**, **Get Many** (search, project, starred, sort), **Update** (name, project, visibility), **Download** (newest PDF, PPTX or images of an existing presentation), **Get Outline** and **Delete**.
+- **Outline first:** **Outline → Create** drafts an outline to review, and **Presentation → Create From Outline** builds the presentation from it.
+- **Share Link → Create, Get, Delete**, and **Access → Grant, Get Many, Update, Revoke** to share a presentation with one person without making it public.
+- **Project → Get, Get Many**, **Brand Kit → Get, Get Many**, **File → Upload, Get, Delete** (a `file_id` for the Presentations.AI MCP server), and **Account → Get, Get Credits** (balance and whether paid work can start).
+- New create options: Allowed Graphics, Company, Deep Research, Delivery, Insider Content, Missing Figures, Name, Purpose and Quality Tier.
+- Credit rates on every create operation: about 10 credits per slide (Lite 5, Premium 20), Deep Research doubles it, and PPTX adds 5 per slide on plans without PowerPoint export.
+
+### Changed
+
+- **AI agents:** operations and settings that need files, delete, share or change who can open a presentation (including Create Share Link and Presentation → Update) are not offered when the node is an AI Agent tool. The example templates confirm the cost before creating, and the MCP example tells the agent to create Private presentations in the content's language (the MCP server's defaults are Workspace and English) and doesn't let it make share links.
+- **Example templates** use node version 3 and need 0.5.0 or later. They run on n8n 2.33 and later, except the agent-tool template, which needs n8n 2.47.
+- Requests that Presentations.AI rate-limits (429) are sent again after the wait it asks for (at most 30 seconds), up to three tries in all. After a temporary outage only reads, deletes and creating a presentation are retried, since those can't charge twice.
+- Create From File and File → Upload list WebP images among the accepted files.
+- Clearer errors for a suspended workspace (a new API key won't help; check billing), text that's too long, files that are still being read or can't be read, and rate limits.
+
+### Fixed
+
+- In version 2 and later, an empty Visibility from an expression now means Private, and an unknown value such as `public` stops before anything is created. Before, the presentation was created visible to the whole workspace.
+- A presentation link with another ID after the presentation's own, such as a slide ID, or one in the query string, now picks the presentation.
+- In version 2 and later, the old 0.2.x Export Format value `share` no longer makes a public link; it stops with a message pointing to Create Share Link. Version 1 nodes keep the old behaviour.
+- In version 2 and later, and in Outline → Create, an empty Language is sent as `auto` (follow the content) instead of being left out, which the API treats as English.
+- Outline → Create tells a file that's still being read apart from a Request ID that already paid, and keeps the error code and trace ID.
+- The out-of-credits message now reads: "You're out of credits. Top up in Presentations.AI, then try again."
+
 ## [0.4.0] - 2026-11-13
 
 ### Added

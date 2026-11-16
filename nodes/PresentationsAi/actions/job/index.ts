@@ -16,7 +16,7 @@ export const description: INodeProperties[] = [
 				// The value stays "checkStatus" so saved workflows keep working.
 				name: 'Get Status',
 				value: 'checkStatus',
-				action: 'Get job status',
+				action: 'Get the status of a presentation job',
 				description:
 					"Check whether a presentation job is complete and optionally download the file. Use after creating with 'Wait for Completion' off.",
 			},

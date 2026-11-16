@@ -138,6 +138,16 @@ describe('buildDeckRequest', () => {
 			'brand_kit_id',
 			'project_id',
 			'visibility',
+			'name',
+			'company',
+			'insider_content',
+			'deck_purpose',
+			'delivery',
+			'missing_data',
+			'budget_tier',
+			'deep_search',
+			'graphic_types',
+			'outline',
 		]);
 		const body = buildDeckRequest({
 			topic: 't',
@@ -155,6 +165,15 @@ describe('buildDeckRequest', () => {
 			brandKitId: 'b',
 			projectId: 'p',
 			visibility: 'workspace',
+			name: 'n',
+			company: 'c',
+			insiderContent: 'i',
+			purpose: 'sales',
+			delivery: 'read',
+			missingFigures: 'placeholder',
+			qualityTier: 'premium',
+			deepResearch: true,
+			allowedGraphics: 'table',
 		});
 		for (const key of Object.keys(body)) expect(allowed.has(key)).toBe(true);
 	});
